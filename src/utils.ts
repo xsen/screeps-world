@@ -9,9 +9,28 @@ export const utils = {
   },
 
   goHarvest: (creep: Creep) => {
-    const target = creep.memory.targetId
-      ? Game.getObjectById<Source>(creep.memory.targetId)
-      : creep.pos.findClosestByRange(FIND_SOURCES);
+    const creepCapacity = creep.store.getFreeCapacity();
+    const getSource = (creep: Creep): Source | null => {
+      let target = creep.memory.targetId
+        ? Game.getObjectById<Source>(creep.memory.targetId)
+        : creep.pos.findClosestByRange(FIND_SOURCES);
+
+      if (target != null) {
+        if (target.energy < creepCapacity) {
+          const source = creep.room.find(FIND_SOURCES).find((source) => {
+            return source.energy > creepCapacity;
+          });
+
+          if (source != undefined) {
+            target = source;
+          }
+        }
+      }
+
+      return target;
+    };
+
+    const target = getSource(creep);
 
     if (target != null) {
       if (creep.harvest(target) == ERR_NOT_IN_RANGE) {
@@ -23,7 +42,7 @@ export const utils = {
     let damagedStructures = creep.pos.findClosestByRange(FIND_STRUCTURES, {
       filter: (structure) => {
         if (structure.structureType === STRUCTURE_ROAD) {
-          return structure.hits < structure.hitsMax - 1000;
+          return structure.hits < structure.hitsMax * 0.7;
         }
         return false;
       },

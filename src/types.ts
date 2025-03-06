@@ -13,6 +13,7 @@ declare global {
 
   interface CreepMemory {
     roleId: number;
+    generation: number;
     room?: string;
     targetId?: string;
     building?: boolean;
@@ -20,7 +21,7 @@ declare global {
     working?: boolean;
   }
 
-  interface CreepSpawn {
+  interface SpawnCreeps {
     role: CreepRole;
     body: BodyPartConstant[];
     limit: number;

@@ -1,4 +1,4 @@
-import { utils } from "../utils";
+import { utils } from "../utils.ts";
 
 export const harvester: CreepRole = {
   id: 1,
@@ -9,19 +9,26 @@ export const harvester: CreepRole = {
       return;
     }
 
-    const targets = creep.room.find(FIND_STRUCTURES, {
-      filter: (structure) => {
+    const chargeStructure = [
+      STRUCTURE_EXTENSION,
+      // STRUCTURE_TOWER,
+      STRUCTURE_SPAWN,
+    ];
+
+    const targets = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+      filter: (
+        structure: StructureExtension | /*StructureTower |*/ StructureSpawn,
+      ) => {
         return (
-          (structure.structureType == STRUCTURE_EXTENSION ||
-            structure.structureType == STRUCTURE_SPAWN ||
-            structure.structureType == STRUCTURE_TOWER) &&
+          chargeStructure.includes(structure.structureType) &&
           structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
         );
       },
     });
-    if (targets.length > 0) {
-      if (creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(targets[0], { visualizePathStyle: { stroke: "#ffffff" } });
+
+    if (targets != undefined) {
+      if (creep.transfer(targets, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+        creep.moveTo(targets, { visualizePathStyle: { stroke: "#ffffff" } });
       }
     }
   },
