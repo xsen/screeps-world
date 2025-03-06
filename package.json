@@ -9,10 +9,12 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.17.16",
+    "@types/node": "^22.13.9",
     "@types/screeps": "^3.2.3",
     "axios": "^1.8.1",
     "dotenv": "^16.4.7",
     "lodash": "^4.17.21",
+    "prettier": "3.5.3",
     "typescript": "~5.7.2",
     "vite": "^6.2.0"
   }

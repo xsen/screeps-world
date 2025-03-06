@@ -1,63 +1,27 @@
-import {Utils} from "./utils";
-import {harvester} from "./roles/harvester.ts";
-import {builder} from "./roles/builder.ts";
-import {upgrader} from "./roles/upgrader.ts";
+import { utils } from "./utils";
+import { spawner } from "./modules/spawner.ts";
+import { planner } from "./modules/planner.ts";
 
-
-const _ = require('lodash');
 const permanentSafeMode = true;
 
 export const loop = () => {
-  console.log(`Current game tick is ${Game.time}`);
+  const currentRoom = Game.spawns["Spawn1"].room;
 
-  _.forEach(Game.rooms, (room: Room) => {
-    console.log(`Current room is ${room.name}`);
-
-    if (permanentSafeMode) {
-      Utils.updateSafeMode(room)
-    }
-  })
-
-
-  for (const name in Memory.creeps) {
-    if (!(name in Game.creeps)) {
-      delete Memory.creeps[name];
-    }
+  if (permanentSafeMode) {
+    utils.updateSafeMode(currentRoom);
   }
 
-  const creepLimits = [
-    {role: 'harvester', body: [WORK, CARRY, MOVE], limit: 2},
-    {role: 'upgrader', body: [WORK, CARRY, MOVE], limit: 1},
-    {role: 'builder', body: [WORK, CARRY, MOVE], limit: 1}
-  ];
+  //@todo: error handling
+  spawner.create();
+  planner.create();
 
-  creepLimits.forEach(it => {
-    const alives = _.filter(Game.creeps, (creep: Creep) => creep.memory.role == it.role);
+  Object.values(Game.rooms).forEach((room) => {
+    const data = {
+      room: room,
+      creeps: room.find(FIND_MY_CREEPS),
+    };
 
-    if (alives.length < it.limit) {
-      const newName = it.role + Game.time;
-
-      Game.spawns['Spawn1'].spawnCreep(it.body, newName, {
-        memory: {
-          role: it.role,
-        }
-      });
-    }
-  })
-
-  for (let name in Game.creeps) {
-    const creep = Game.creeps[name];
-
-    if (creep.memory.role == 'harvester') {
-      harvester.run(creep);
-    }
-
-    if (creep.memory.role == 'builder') {
-      builder.run(creep);
-    }
-
-    if (creep.memory.role == 'upgrader') {
-      upgrader.run(creep);
-    }
-  }
+    spawner.execute(data);
+    planner.execute(data);
+  });
 };
