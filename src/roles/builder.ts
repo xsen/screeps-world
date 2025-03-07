@@ -5,26 +5,29 @@ export const builder: CreepRole = {
   name: "builder",
 
   run: function (creep: Creep) {
-    if (creep.memory.building && creep.store[RESOURCE_ENERGY] == 0) {
-      creep.memory.building = false;
-      creep.say("🔄 harvest");
-    }
-    if (!creep.memory.building && creep.store.getFreeCapacity() == 0) {
-      creep.memory.building = true;
-      creep.say("🚧 build");
+    if (creep.store.getUsedCapacity() == 0 || creep.memory.stage == "spawned") {
+      creep.memory.stage = "refilling";
     }
 
-    if (creep.memory.building) {
-      const target = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
-      if (target != null) {
-        if (creep.build(target) == ERR_NOT_IN_RANGE) {
-          creep.moveTo(target, { visualizePathStyle: { stroke: "#ffffff" } });
+    switch (creep.memory.stage) {
+      case "refilling":
+        if (creep.store.getFreeCapacity() > 0) {
+          utils.getEnergy(creep);
+          return;
         }
-      } else {
-        utils.goRepair(creep);
-      }
-    } else {
-      utils.goHarvest(creep);
+        creep.memory.stage = "building";
+        break;
+
+      case "building":
+        const target = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
+        if (target != null) {
+          if (creep.build(target) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(target, { visualizePathStyle: { stroke: "#ffffff" } });
+          }
+        } else {
+          utils.goRepair(creep);
+        }
+        break;
     }
   },
 };

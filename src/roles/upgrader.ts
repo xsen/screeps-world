@@ -11,13 +11,13 @@ export const upgrader: CreepRole = {
       return;
     }
 
-    if (creep.memory.stage == "spawned") {
+    if (creep.store.getUsedCapacity() == 0 || creep.memory.stage == "spawned") {
       creep.memory.stage = "refilling";
     }
 
     switch (creep.memory.stage) {
       case "refilling":
-        creep.say("⚡ up: downloading");
+        // creep.say("⚡ up: downloading");
         if (creep.store.getFreeCapacity() > 0) {
           utils.getEnergy(creep);
           return;
@@ -26,7 +26,7 @@ export const upgrader: CreepRole = {
         break;
 
       case "upgrading":
-        creep.say("⚡ up: uploading");
+        // creep.say("⚡ up: uploading");
         if (
           creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE
         ) {

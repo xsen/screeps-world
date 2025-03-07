@@ -25,7 +25,7 @@ export const miner: CreepRole = {
         }
 
         if (creep.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
-          creep.say("⚡ min: download");
+          // creep.say("⚡ min: download");
           const target = Game.getObjectById<Source>(creep.memory.targetId);
 
           if (target == null) {
@@ -51,7 +51,7 @@ export const miner: CreepRole = {
           break;
         }
 
-        creep.say("⚡ min: upload");
+        // creep.say("⚡ min: upload");
         if (creep.transfer(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
           creep.moveTo(container, {
             visualizePathStyle: { stroke: Color.ORANGE },

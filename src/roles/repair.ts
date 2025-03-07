@@ -5,19 +5,19 @@ export const repair: CreepRole = {
   name: "repair",
 
   run: function (creep: Creep) {
-    if (creep.memory.building && creep.store[RESOURCE_ENERGY] == 0) {
-      creep.memory.building = false;
-      creep.say("🔄 harvest");
-    }
-    if (!creep.memory.building && creep.store.getFreeCapacity() == 0) {
-      creep.memory.building = true;
-      creep.say("🚧 repair");
+    if (creep.store.getUsedCapacity() == 0 || creep.memory.stage == "spawned") {
+      creep.memory.stage = "refilling";
     }
 
-    if (creep.memory.building) {
+    if (creep.memory.stage == "refilling") {
+      utils.getEnergy(creep);
+      if (creep.store.getFreeCapacity() == 0) {
+        creep.memory.stage = "repairing";
+      }
+    }
+
+    if (creep.memory.stage == "repairing") {
       utils.goRepair(creep);
-    } else {
-      utils.goHarvest(creep);
     }
   },
 };

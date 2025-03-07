@@ -3,6 +3,7 @@ import { builder } from "../roles/builder.ts";
 import { repair } from "../roles/repair.ts";
 import { upgrader } from "../roles/upgrader.ts";
 import { miner } from "../roles/miner.ts";
+import { carry } from "../roles/carry.ts";
 
 export const planner: BaseModule = {
   config: {
@@ -12,6 +13,7 @@ export const planner: BaseModule = {
       [repair.id]: repair,
       [upgrader.id]: upgrader,
       [miner.id]: miner,
+      [carry.id]: carry,
     } as const,
   },
   create: function () {

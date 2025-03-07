@@ -1,8 +1,8 @@
-import { harvester } from "../roles/harvester.ts";
 import { repair } from "../roles/repair.ts";
 import { upgrader } from "../roles/upgrader.ts";
 import { builder } from "../roles/builder.ts";
 import { miner } from "../roles/miner.ts";
+import { carry } from "../roles/carry.ts";
 
 // const _ = require("lodash");
 export const spawner: BaseModule = {
@@ -23,63 +23,94 @@ export const spawner: BaseModule = {
     }
 
     if (spawner.spawning != null) {
-      console.log("Spawn is busy: ", spawner.spawning.name);
       return;
     }
 
     const spawnCreeps: SpawnCreeps[] = [
       {
-        role: harvester,
-        body: [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE],
+        generation: 2,
+        role: repair,
+        body: [WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+        limit: 1,
+      },
+      {
+        generation: 3,
+        role: upgrader,
+        body: [WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
         limit: 2,
       },
       {
-        role: harvester,
-        body: [WORK, CARRY, MOVE, MOVE],
-        limit: 0,
-      },
-      {
-        role: repair,
-        body: [WORK, WORK, CARRY, MOVE],
-        limit: 1,
-      },
-      {
-        role: upgrader,
-        body: [WORK, WORK, WORK, CARRY, MOVE],
-        limit: 1,
-      },
-      {
+        generation: 4,
         role: builder,
-        body: [WORK, WORK, CARRY, CARRY, MOVE],
-        limit: 1,
+        body: [
+          WORK,
+          WORK,
+          WORK,
+          WORK,
+          CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+        ],
+        limit: 2,
       },
       {
+        generation: 5,
         role: miner,
-        body: [WORK, WORK, WORK, CARRY, CARRY, MOVE],
+        body: [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE],
+        limit: 4,
+      },
+
+      {
+        generation: 5,
+        role: carry,
+        body: [
+          CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+        ],
         limit: 2,
       },
     ];
 
-    spawnCreeps.forEach((spawnItem, spawnItemIndex) => {
+    spawnCreeps.forEach((spawnItem) => {
       let count = 0;
       data.creeps.forEach((cr) => {
         if (
           cr.memory.roleId == spawnItem.role.id &&
-          cr.memory.generation == spawnItemIndex
+          cr.memory.generation == spawnItem.generation
         ) {
           count++;
         }
       });
       if (count < spawnItem.limit) {
-        const name = `${spawnItem.role.name}_${spawnItemIndex}_${Game.time}`;
+        const name = `${spawnItem.role.name}_${spawnItem.generation}_${Game.time}`;
 
-        console.log("Spawning creep: ", name);
         spawner.spawnCreep(spawnItem.body, name, {
           memory: {
             stage: "spawned",
             roleId: spawnItem.role.id,
             targetId: spawnItem.target,
-            generation: spawnItemIndex,
+            generation: spawnItem.generation,
           },
         });
       }

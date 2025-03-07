@@ -1,19 +1,9 @@
 import { Color } from "./enums.ts";
 
 export const utils = {
-  updateSafeMode: (room: Room) => {
-    if (
-      room.controller?.safeMode != undefined &&
-      room.controller.safeMode < 5
-    ) {
-      room.controller.activateSafeMode();
-    }
-  },
-
   getEnergy: (creep: Creep): void => {
-    const container = creep.pos.findClosestByPath<StructureContainer>(
-      FIND_STRUCTURES,
-      {
+    const containers = creep.pos
+      .findInRange(FIND_STRUCTURES, 6, {
         filter: (structure) => {
           if (structure.structureType === STRUCTURE_CONTAINER) {
             return (
@@ -22,19 +12,23 @@ export const utils = {
           }
           return false;
         },
-      },
-    );
+      })
+      .sort((s1, s2) => s1.pos.getRangeTo(creep) - s2.pos.getRangeTo(creep));
 
-    if (container == null) {
-      console.log("Error: no container in the current room", creep.room.name);
+    const target = containers.length > 0 ? containers[0] : creep.room.storage;
+    if (target == null) {
+      console.log("Error: container not found");
       return;
     }
 
-    if (creep.withdraw(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-      creep.moveTo(container, { visualizePathStyle: { stroke: Color.GRAY } });
+    if (creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+      creep.moveTo(target, { visualizePathStyle: { stroke: Color.GRAY } });
     }
   },
 
+  /**
+   * @deprecated
+   */
   goHarvest: (creep: Creep) => {
     const creepCapacity = creep.store.getFreeCapacity();
     const getSource = (creep: Creep): Source | null => {
@@ -65,6 +59,10 @@ export const utils = {
       }
     }
   },
+
+  /**
+   * @deprecated
+   */
   goRepair: (creep: Creep) => {
     let damagedStructures = creep.pos.findClosestByRange(FIND_STRUCTURES, {
       filter: (structure) => {

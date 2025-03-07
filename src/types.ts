@@ -9,16 +9,12 @@ declare global {
     stage: string;
     targetId?: string;
     generation: number;
-
-    room?: string;
-    building?: boolean;
-    upgrading?: boolean;
-    working?: boolean;
   }
 
   interface SpawnCreeps {
     role: CreepRole;
     body: BodyPartConstant[];
+    generation: number;
     limit: number;
     target?: string;
   }
