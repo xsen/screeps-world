@@ -1,3 +1,5 @@
+import { Color } from "./enums.ts";
+
 export const utils = {
   updateSafeMode: (room: Room) => {
     if (
@@ -5,6 +7,31 @@ export const utils = {
       room.controller.safeMode < 5
     ) {
       room.controller.activateSafeMode();
+    }
+  },
+
+  getEnergy: (creep: Creep): void => {
+    const container = creep.pos.findClosestByPath<StructureContainer>(
+      FIND_STRUCTURES,
+      {
+        filter: (structure) => {
+          if (structure.structureType === STRUCTURE_CONTAINER) {
+            return (
+              structure.store.getUsedCapacity() >= creep.store.getCapacity()
+            );
+          }
+          return false;
+        },
+      },
+    );
+
+    if (container == null) {
+      console.log("Error: no container in the current room", creep.room.name);
+      return;
+    }
+
+    if (creep.withdraw(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+      creep.moveTo(container, { visualizePathStyle: { stroke: Color.GRAY } });
     }
   },
 
@@ -42,7 +69,7 @@ export const utils = {
     let damagedStructures = creep.pos.findClosestByRange(FIND_STRUCTURES, {
       filter: (structure) => {
         if (structure.structureType === STRUCTURE_ROAD) {
-          return structure.hits < structure.hitsMax * 0.7;
+          return structure.hits < structure.hitsMax * 0.8;
         }
         return false;
       },

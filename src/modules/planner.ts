@@ -2,6 +2,7 @@ import { harvester } from "../roles/harvester.ts";
 import { builder } from "../roles/builder.ts";
 import { repair } from "../roles/repair.ts";
 import { upgrader } from "../roles/upgrader.ts";
+import { miner } from "../roles/miner.ts";
 
 export const planner: BaseModule = {
   config: {
@@ -10,6 +11,7 @@ export const planner: BaseModule = {
       [builder.id]: builder,
       [repair.id]: repair,
       [upgrader.id]: upgrader,
+      [miner.id]: miner,
     } as const,
   },
   create: function () {

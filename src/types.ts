@@ -1,11 +1,4 @@
 declare global {
-  // Syntax for adding proprties to `global` (ex "global.log")
-  namespace NodeJS {
-    interface Global {
-      log: any;
-    }
-  }
-
   interface Memory {
     uuid: number;
     log: any;
@@ -13,9 +6,11 @@ declare global {
 
   interface CreepMemory {
     roleId: number;
-    generation: number;
-    room?: string;
+    stage: string;
     targetId?: string;
+    generation: number;
+
+    room?: string;
     building?: boolean;
     upgrading?: boolean;
     working?: boolean;
@@ -42,6 +37,7 @@ declare global {
   interface CreepRole {
     id: number;
     name: string;
+    stage?: string;
     run: (creep: Creep) => void;
   }
 }

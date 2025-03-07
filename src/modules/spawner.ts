@@ -1,7 +1,8 @@
 import { harvester } from "../roles/harvester.ts";
+import { repair } from "../roles/repair.ts";
 import { upgrader } from "../roles/upgrader.ts";
 import { builder } from "../roles/builder.ts";
-import { repair } from "../roles/repair.ts";
+import { miner } from "../roles/miner.ts";
 
 // const _ = require("lodash");
 export const spawner: BaseModule = {
@@ -33,6 +34,11 @@ export const spawner: BaseModule = {
         limit: 2,
       },
       {
+        role: harvester,
+        body: [WORK, CARRY, MOVE, MOVE],
+        limit: 0,
+      },
+      {
         role: repair,
         body: [WORK, WORK, CARRY, MOVE],
         limit: 1,
@@ -40,11 +46,16 @@ export const spawner: BaseModule = {
       {
         role: upgrader,
         body: [WORK, WORK, WORK, CARRY, MOVE],
-        limit: 2,
+        limit: 1,
       },
       {
         role: builder,
-        body: [WORK, WORK, WORK, CARRY, MOVE],
+        body: [WORK, WORK, CARRY, CARRY, MOVE],
+        limit: 1,
+      },
+      {
+        role: miner,
+        body: [WORK, WORK, WORK, CARRY, CARRY, MOVE],
         limit: 2,
       },
     ];
@@ -60,11 +71,12 @@ export const spawner: BaseModule = {
         }
       });
       if (count < spawnItem.limit) {
-        const name = `${spawnItem.role.name}_${count}_${Game.time}`;
+        const name = `${spawnItem.role.name}_${spawnItemIndex}_${Game.time}`;
 
         console.log("Spawning creep: ", name);
         spawner.spawnCreep(spawnItem.body, name, {
           memory: {
+            stage: "spawned",
             roleId: spawnItem.role.id,
             targetId: spawnItem.target,
             generation: spawnItemIndex,
