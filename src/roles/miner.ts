@@ -12,7 +12,6 @@ export const miner: CreepRole = {
           break;
         }
 
-        creep.say("⚡ min: go");
         creep.memory.stage = "harvesting";
         creep.memory.targetId = target.id;
         creep.moveTo(target, { visualizePathStyle: { stroke: Color.GRAY } });

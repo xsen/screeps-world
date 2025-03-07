@@ -96,8 +96,8 @@ export const spawner: BaseModule = {
       let count = 0;
       data.creeps.forEach((cr) => {
         if (
-          cr.memory.roleId == spawnItem.role.id &&
-          cr.memory.generation == spawnItem.generation
+          cr.memory.roleId === spawnItem.role.id &&
+          cr.memory.generation === spawnItem.generation
         ) {
           count++;
         }
@@ -105,7 +105,7 @@ export const spawner: BaseModule = {
       if (count < spawnItem.limit) {
         const name = `${spawnItem.role.name}_${spawnItem.generation}_${Game.time}`;
 
-        spawner.spawnCreep(spawnItem.body, name, {
+        const res = spawner.spawnCreep(spawnItem.body, name, {
           memory: {
             stage: "spawned",
             roleId: spawnItem.role.id,
@@ -113,7 +113,25 @@ export const spawner: BaseModule = {
             generation: spawnItem.generation,
           },
         });
+
+        if (res == ERR_NOT_ENOUGH_ENERGY) {
+          console.log(
+            "Error: not enough energy for spawn",
+            spawnItem.role.name,
+          );
+        }
       }
     });
+
+    if (data.creeps.find((cr) => cr.memory.roleId == carry.id) == undefined) {
+      const name = `${carry.name}_ERROR_${Game.time}`;
+      spawner.spawnCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], name, {
+        memory: {
+          generation: -1,
+          stage: "spawned",
+          roleId: carry.id,
+        },
+      });
+    }
   },
 };
