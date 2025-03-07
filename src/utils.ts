@@ -1,9 +1,9 @@
 import { Color } from "./enums.ts";
 
 export const utils = {
-  getEnergy: (creep: Creep): void => {
+  getEnergy: (creep: Creep, range: number = 6): void => {
     const containers = creep.pos
-      .findInRange(FIND_STRUCTURES, 6, {
+      .findInRange(FIND_STRUCTURES, range, {
         filter: (structure) => {
           if (structure.structureType === STRUCTURE_CONTAINER) {
             return (

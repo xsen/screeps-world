@@ -58,7 +58,7 @@ export const spawner: BaseModule = {
           MOVE,
           MOVE,
         ],
-        limit: 2,
+        limit: 1,
       },
       {
         generation: 5,

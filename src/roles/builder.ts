@@ -1,11 +1,12 @@
 import { utils } from "../utils.ts";
+import { Color } from "../enums.ts";
 
 export const builder: CreepRole = {
   id: 2,
   name: "builder",
 
   run: function (creep: Creep) {
-    if (creep.store.getUsedCapacity() == 0 || creep.memory.stage == "spawned") {
+    if (creep.store.getUsedCapacity() == 0) {
       creep.memory.stage = "refilling";
     }
 
@@ -13,7 +14,7 @@ export const builder: CreepRole = {
       case "refilling":
         if (creep.store.getFreeCapacity() > 0) {
           utils.getEnergy(creep);
-          return;
+          break;
         }
         creep.memory.stage = "building";
         break;
@@ -22,11 +23,14 @@ export const builder: CreepRole = {
         const target = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
         if (target != null) {
           if (creep.build(target) == ERR_NOT_IN_RANGE) {
-            creep.moveTo(target, { visualizePathStyle: { stroke: "#ffffff" } });
+            creep.moveTo(target, {
+              visualizePathStyle: { stroke: Color.GRAY },
+            });
           }
-        } else {
-          utils.goRepair(creep);
+          break;
         }
+
+        utils.goRepair(creep);
         break;
     }
   },

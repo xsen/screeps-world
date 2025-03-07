@@ -11,7 +11,7 @@ export const upgrader: CreepRole = {
       return;
     }
 
-    if (creep.store.getUsedCapacity() == 0 || creep.memory.stage == "spawned") {
+    if (creep.store.getUsedCapacity() == 0) {
       creep.memory.stage = "refilling";
     }
 
