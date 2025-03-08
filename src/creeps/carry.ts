@@ -26,27 +26,22 @@ export const carry: CreepHandler = {
 };
 
 const refillEnergy = (creep: Creep): void => {
-  let target = creep.pos.findClosestByPath<StructureContainer>(
-    FIND_STRUCTURES,
-    {
-      filter: (structure) => {
-        if (structure.structureType === STRUCTURE_CONTAINER) {
-          return structure.store.getUsedCapacity() >= creep.store.getCapacity();
-        }
-        return false;
-      },
-    },
-  );
+  let target: StructureStorage | StructureContainer | null;
 
-  if (target == null) {
-    target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-      filter: (structure) => {
+  target = creep.pos.findClosestByPath<StructureContainer>(FIND_STRUCTURES, {
+    filter: (structure) => {
+      if (structure.structureType === STRUCTURE_CONTAINER) {
         return (
-          structure.structureType === STRUCTURE_STORAGE &&
-          structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+          structure.store.getUsedCapacity(RESOURCE_ENERGY) >=
+          creep.store.getCapacity()
         );
-      },
-    });
+      }
+      return false;
+    },
+  });
+
+  if (target == null && creep.room.storage) {
+    target = creep.room.storage;
   }
 
   if (target == null) {

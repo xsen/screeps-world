@@ -10,11 +10,12 @@ export const repair: CreepHandler = {
       creep.memory.stage = "refilling";
     }
 
+    if (creep.store.getFreeCapacity() == 0) {
+      creep.memory.stage = "repairing";
+    }
+
     if (creep.memory.stage == "refilling") {
       utils.getEnergy(creep);
-      if (creep.store.getFreeCapacity() == 0) {
-        creep.memory.stage = "repairing";
-      }
     }
 
     if (creep.memory.stage == "repairing") {
@@ -24,24 +25,17 @@ export const repair: CreepHandler = {
 };
 
 export const repairStructures = (creep: Creep) => {
-  if (creep.memory.targetId) {
-    // @maybe: проверить что таргет уже не лечат?
-    const target = Game.getObjectById<Structure>(creep.memory.targetId);
-    if (target == undefined || target.hits == target.hitsMax) {
-      creep.memory.targetId = undefined;
-    } else {
-      repairStructure(creep, target);
-    }
-  }
+  const target = creep.memory.targetId
+    ? Game.getObjectById<Structure>(creep.memory.targetId)
+    : getRepairTarget(creep);
 
-  const target = getRepairTarget(creep);
-  if (target) {
+  if (target && target.hits < target.hitsMax) {
     creep.memory.targetId = target.id;
     repairStructure(creep, target);
-    return;
+  } else {
+    creep.memory.targetId = undefined;
+    repairDefense(creep);
   }
-
-  repairDefense(creep);
 };
 
 const repairStructure = (creep: Creep, target: Structure) => {
