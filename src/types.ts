@@ -12,7 +12,7 @@ declare global {
   }
 
   interface SpawnCreeps {
-    role: CreepRole;
+    handler: CreepHandler;
     body: BodyPartConstant[];
     generation: number;
     limit: number;
@@ -30,7 +30,7 @@ declare global {
     creeps: Creep[];
   }
 
-  interface CreepRole {
+  interface CreepHandler {
     id: number;
     name: string;
     stage?: string;

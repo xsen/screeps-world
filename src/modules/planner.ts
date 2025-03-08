@@ -1,14 +1,12 @@
-import { harvester } from "../roles/harvester.ts";
-import { builder } from "../roles/builder.ts";
-import { repair } from "../roles/repair.ts";
-import { upgrader } from "../roles/upgrader.ts";
-import { miner } from "../roles/miner.ts";
-import { carry } from "../roles/carry.ts";
+import { builder } from "../creeps/builder.ts";
+import { repair } from "../creeps/repair.ts";
+import { upgrader } from "../creeps/upgrader.ts";
+import { miner } from "../creeps/miner.ts";
+import { carry } from "../creeps/carry.ts";
 
 export const planner: BaseModule = {
   config: {
     roles: {
-      [harvester.id]: harvester,
       [builder.id]: builder,
       [repair.id]: repair,
       [upgrader.id]: upgrader,
@@ -24,7 +22,6 @@ export const planner: BaseModule = {
       const role = this.config.roles[creep.memory.roleId];
       if (role == null) {
         console.log("Error: no role in the current creep", creep);
-        harvester.run(creep);
         return;
       }
 

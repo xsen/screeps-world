@@ -1,6 +1,6 @@
 import { Color } from "../enums.ts";
 
-export const miner: CreepRole = {
+export const miner: CreepHandler = {
   id: 5,
   name: "miner",
   run: function (creep: Creep) {

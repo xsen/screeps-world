@@ -1,8 +1,8 @@
-import { repair } from "../roles/repair.ts";
-import { upgrader } from "../roles/upgrader.ts";
-import { builder } from "../roles/builder.ts";
-import { miner } from "../roles/miner.ts";
-import { carry } from "../roles/carry.ts";
+import { repair } from "../creeps/repair.ts";
+import { upgrader } from "../creeps/upgrader.ts";
+import { builder } from "../creeps/builder.ts";
+import { miner } from "../creeps/miner.ts";
+import { carry } from "../creeps/carry.ts";
 
 // const _ = require("lodash");
 export const spawner: BaseModule = {
@@ -29,19 +29,45 @@ export const spawner: BaseModule = {
     const spawnCreeps: SpawnCreeps[] = [
       {
         generation: 2,
-        role: repair,
-        body: [WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+        handler: repair,
+        body: [
+          WORK,
+          CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+        ],
         limit: 1,
       },
       {
         generation: 3,
-        role: upgrader,
-        body: [WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
-        limit: 2,
+        handler: upgrader,
+        body: [
+          WORK,
+          WORK,
+          WORK,
+          WORK,
+          CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
+          MOVE,
+          MOVE,
+          MOVE,
+          MOVE,
+        ],
+        limit: 4,
       },
       {
         generation: 4,
-        role: builder,
+        handler: builder,
         body: [
           WORK,
           WORK,
@@ -58,18 +84,18 @@ export const spawner: BaseModule = {
           MOVE,
           MOVE,
         ],
-        limit: 1,
+        limit: 0,
       },
       {
         generation: 5,
-        role: miner,
+        handler: miner,
         body: [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE],
         limit: 4,
       },
 
       {
         generation: 5,
-        role: carry,
+        handler: carry,
         body: [
           CARRY,
           CARRY,
@@ -96,19 +122,19 @@ export const spawner: BaseModule = {
       let count = 0;
       data.creeps.forEach((cr) => {
         if (
-          cr.memory.roleId === spawnItem.role.id &&
+          cr.memory.roleId === spawnItem.handler.id &&
           cr.memory.generation === spawnItem.generation
         ) {
           count++;
         }
       });
       if (count < spawnItem.limit) {
-        const name = `${spawnItem.role.name}_${spawnItem.generation}_${Game.time}`;
+        const name = `${spawnItem.handler.name}_${spawnItem.generation}_${Game.time}`;
 
         const res = spawner.spawnCreep(spawnItem.body, name, {
           memory: {
             stage: "spawned",
-            roleId: spawnItem.role.id,
+            roleId: spawnItem.handler.id,
             targetId: spawnItem.target,
             generation: spawnItem.generation,
           },
@@ -117,7 +143,7 @@ export const spawner: BaseModule = {
         if (res == ERR_NOT_ENOUGH_ENERGY) {
           console.log(
             "Error: not enough energy for spawn",
-            spawnItem.role.name,
+            spawnItem.handler.name,
           );
         }
       }
