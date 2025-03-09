@@ -1,4 +1,3 @@
-import { utils } from "../utils.ts";
 import { Color } from "../enums.ts";
 
 export const upgrader: CreepHandler = {
@@ -12,14 +11,14 @@ export const upgrader: CreepHandler = {
     }
 
     if (creep.store.getUsedCapacity() == 0) {
-      creep.memory.stage = "refilling";
+      creep.memory.status = "refilling";
     }
     if (creep.store.getFreeCapacity() == 0) {
-      creep.memory.stage = "upgrading";
+      creep.memory.status = "upgrading";
     }
 
-    if (creep.memory.stage == "refilling") {
-      utils.getEnergy(creep);
+    if (creep.memory.status == "refilling") {
+      creep.getEnergy();
       return;
     }
 

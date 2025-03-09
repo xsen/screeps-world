@@ -4,7 +4,7 @@ export const miner: CreepHandler = {
   id: 5,
   name: "miner",
   run: function (creep: Creep) {
-    switch (creep.memory.stage) {
+    switch (creep.memory.status) {
       case "spawned":
         const target = getSource(creep);
         if (target == null) {
@@ -12,8 +12,9 @@ export const miner: CreepHandler = {
           break;
         }
 
-        creep.memory.stage = "harvesting";
-        creep.memory.targetId = target.id;
+        creep.memory.status = "harvesting";
+        creep.setCreepTarget(target);
+
         creep.moveTo(target, { visualizePathStyle: { stroke: Color.GRAY } });
 
         break;
@@ -40,7 +41,7 @@ export const miner: CreepHandler = {
           break;
         }
 
-        creep.memory.stage = "transferring";
+        creep.memory.status = "transferring";
         break;
 
       case "transferring":
@@ -58,7 +59,7 @@ export const miner: CreepHandler = {
         }
 
         if (creep.store.getUsedCapacity() == 0) {
-          creep.memory.stage = "harvesting";
+          creep.memory.status = "harvesting";
         }
         break;
     }

@@ -4,43 +4,64 @@ export const carry: CreepHandler = {
   id: 6,
   name: "carry",
   run: function (creep: Creep) {
+    // @todo: get energy from tombstone
+    // const tombstone = creep.pos.findClosestByPath(FIND_TOMBSTONES);
+    // if (tombstone) {
+    //   if (creep.withdraw(tombstone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+    //     creep.moveTo(tombstone);
+    //   }
+    //   return;
+    // }
+
     if (creep.store.getUsedCapacity() == 0) {
-      creep.memory.stage = "refilling";
+      creep.memory.targetId = undefined;
+      creep.memory.status = "refilling";
     }
     if (creep.store.getFreeCapacity() == 0) {
-      creep.memory.stage = "delivering";
+      creep.memory.targetId = undefined;
+      creep.memory.status = "delivering";
     }
 
-    if (creep.memory.stage == "refilling") {
+    if (creep.memory.status == "refilling") {
       refillEnergy(creep);
     }
 
-    if (creep.memory.stage == "delivering") {
+    if (creep.memory.status == "delivering") {
       deliverEnergy(creep);
     }
 
-    if (creep.memory.stage == "carrying") {
+    if (creep.memory.status == "carrying") {
       carryEnergy(creep);
     }
   },
 };
 
 const refillEnergy = (creep: Creep): void => {
-  let target: StructureStorage | StructureContainer | null;
+  let target = creep.getCreepTarget<StructureContainer | StructureStorage>();
 
-  target = creep.pos.findClosestByPath<StructureContainer>(FIND_STRUCTURES, {
-    filter: (structure) => {
-      if (structure.structureType === STRUCTURE_CONTAINER) {
-        return (
-          structure.store.getUsedCapacity(RESOURCE_ENERGY) >=
-          creep.store.getCapacity()
-        );
-      }
-      return false;
-    },
-  });
+  if (target) {
+    if (
+      target.store.getUsedCapacity(RESOURCE_ENERGY) < creep.store.getCapacity()
+    ) {
+      target = null;
+    }
+  }
 
-  if (target == null && creep.room.storage) {
+  if (!target) {
+    target = creep.pos.findClosestByPath<StructureContainer>(FIND_STRUCTURES, {
+      filter: (structure) => {
+        if (structure.structureType === STRUCTURE_CONTAINER) {
+          return (
+            structure.store.getUsedCapacity(RESOURCE_ENERGY) >=
+            creep.store.getCapacity()
+          );
+        }
+        return false;
+      },
+    });
+  }
+
+  if (!target && creep.room.storage) {
     target = creep.room.storage;
   }
 
@@ -49,6 +70,7 @@ const refillEnergy = (creep: Creep): void => {
     return;
   }
 
+  creep.setCreepTarget(target);
   if (creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
     creep.moveTo(target, { visualizePathStyle: { stroke: Color.GRAY } });
   }
@@ -60,18 +82,19 @@ function deliverEnergy(creep: Creep) {
   );
 
   if (structures.length == 0) {
-    creep.memory.stage = "carrying";
+    creep.memory.targetId = undefined;
+    creep.memory.status = "carrying";
     return;
   }
 
   const target = structures[0];
   if (target != null) {
+    creep.setCreepTarget(target);
     if (creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
       creep.moveTo(target, {
         visualizePathStyle: { stroke: Color.ORANGE },
       });
     }
-    return;
   }
 }
 
@@ -80,7 +103,8 @@ function carryEnergy(creep: Creep) {
 
   if (storage == null) {
     console.log("Error: storage not found");
-    creep.memory.stage = "delivering";
+    creep.memory.targetId = undefined;
+    creep.memory.status = "delivering";
     return;
   }
 

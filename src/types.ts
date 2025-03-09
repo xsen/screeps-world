@@ -6,8 +6,8 @@ declare global {
 
   interface CreepMemory {
     roleId: number;
-    stage: string;
-    targetId?: string;
+    status: string;
+    targetId?: Id<AnyStructure | Source>;
     generation: number;
   }
 

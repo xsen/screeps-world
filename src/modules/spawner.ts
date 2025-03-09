@@ -4,7 +4,6 @@ import { builder } from "../creeps/builder.ts";
 import { miner } from "../creeps/miner.ts";
 import { carry } from "../creeps/carry.ts";
 
-// const _ = require("lodash");
 export const spawner: BaseModule = {
   create: function () {
     for (const name in Memory.creeps) {
@@ -12,7 +11,6 @@ export const spawner: BaseModule = {
         delete Memory.creeps[name];
       }
     }
-
     return this;
   },
   execute: function (data: ModuleData) {
@@ -26,19 +24,19 @@ export const spawner: BaseModule = {
       return;
     }
 
-    const spawnCreeps: SpawnCreeps[] = [
+    const permanentCreeps: SpawnCreeps[] = [
       {
         generation: 2,
         handler: repair,
         body: [
+          WORK,
+          WORK,
           WORK,
           CARRY,
           CARRY,
           CARRY,
           CARRY,
           CARRY,
-          MOVE,
-          MOVE,
           MOVE,
           MOVE,
           MOVE,
@@ -84,7 +82,7 @@ export const spawner: BaseModule = {
           MOVE,
           MOVE,
         ],
-        limit: 0,
+        limit: 1,
       },
       {
         generation: 5,
@@ -105,6 +103,10 @@ export const spawner: BaseModule = {
           CARRY,
           CARRY,
           CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
+          CARRY,
           MOVE,
           MOVE,
           MOVE,
@@ -114,11 +116,11 @@ export const spawner: BaseModule = {
           MOVE,
           MOVE,
         ],
-        limit: 2,
+        limit: 1,
       },
     ];
 
-    spawnCreeps.forEach((spawnItem) => {
+    permanentCreeps.forEach((spawnItem) => {
       let count = 0;
       data.creeps.forEach((cr) => {
         if (
@@ -133,9 +135,8 @@ export const spawner: BaseModule = {
 
         const res = spawner.spawnCreep(spawnItem.body, name, {
           memory: {
-            stage: "spawned",
+            status: "spawned", // @todo
             roleId: spawnItem.handler.id,
-            targetId: spawnItem.target,
             generation: spawnItem.generation,
           },
         });
@@ -149,15 +150,15 @@ export const spawner: BaseModule = {
       }
     });
 
-    if (data.creeps.find((cr) => cr.memory.roleId == carry.id) == undefined) {
-      const name = `${carry.name}_ERROR_${Game.time}`;
-      spawner.spawnCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], name, {
-        memory: {
-          generation: -1,
-          stage: "spawned",
-          roleId: carry.id,
-        },
-      });
-    }
+    // @todo: method find not working
+    //   const name = `${carry.name}_ERROR_${Game.time}`;
+    //   spawner.spawnCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], name, {
+    //     memory: {
+    //       generation: -1,
+    //       stage: "spawned",
+    //       roleId: carry.id,
+    //     },
+    //   });
+    // }
   },
 };
