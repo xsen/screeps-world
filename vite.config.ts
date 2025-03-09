@@ -1,8 +1,6 @@
 import { defineConfig } from "vite";
-// import { publishToScreeps } from './publishToScreeps';
-// import { copyToScreepsLocal } from './copyToScreepsLocal';
 import { publishToApi, publishToLocal } from "./deploy";
-import dotenv from "dotenv"; // Импортируйте ваш локальный скрипт
+import dotenv from "dotenv";
 
 export default defineConfig(({ mode }) => {
   return {

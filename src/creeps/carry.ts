@@ -4,19 +4,24 @@ export const carry: CreepHandler = {
   id: 6,
   name: "carry",
   run: function (creep: Creep) {
-    // @todo: get energy from tombstone
-    // const tombstone = creep.pos.findClosestByPath(FIND_TOMBSTONES);
-    // if (tombstone) {
-    //   if (creep.withdraw(tombstone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-    //     creep.moveTo(tombstone);
-    //   }
-    //   return;
-    // }
+    if (creep.memory.status == "spawned") {
+      const tombstone = creep.pos.findClosestByPath(FIND_TOMBSTONES, {
+        filter: (t) => t.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
+      });
+      if (tombstone) {
+        if (creep.withdraw(tombstone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+          creep.moveTo(tombstone);
+        }
+        return;
+      }
+      creep.memory.status = "delivering";
+    }
 
     if (creep.store.getUsedCapacity() == 0) {
       creep.memory.targetId = undefined;
       creep.memory.status = "refilling";
     }
+
     if (creep.store.getFreeCapacity() == 0) {
       creep.memory.targetId = undefined;
       creep.memory.status = "delivering";

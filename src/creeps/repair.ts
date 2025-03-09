@@ -25,7 +25,7 @@ export const repair: CreepHandler = {
 
 export const repairStructures = (creep: Creep) => {
   const target = creep.memory.targetId
-    ? Game.getObjectById<AnyStructure>(creep.memory.targetId)
+    ? creep.getCreepTarget<AnyStructure>()
     : getRepairTarget(creep);
 
   if (target && target.hits < target.hitsMax) {
