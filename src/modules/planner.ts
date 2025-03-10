@@ -1,12 +1,12 @@
-import { builder } from "../creeps/builder.ts";
-import { repair } from "../creeps/repair.ts";
-import { upgrader } from "../creeps/upgrader.ts";
-import { miner } from "../creeps/miner.ts";
-import { carry } from "../creeps/carry.ts";
+import { repair } from "../creeps/handlers/repair.ts";
+import { upgrader } from "../creeps/handlers/upgrader.ts";
+import { miner } from "../creeps/handlers/miner.ts";
+import { carry } from "../creeps/handlers/carry.ts";
+import { builder } from "../creeps/handlers/builder.ts";
 
 export const planner: BaseModule = {
   config: {
-    roles: {
+    roleHandlers: {
       [builder.id]: builder,
       [repair.id]: repair,
       [upgrader.id]: upgrader,
@@ -19,13 +19,19 @@ export const planner: BaseModule = {
   },
   execute: function (data: ModuleData) {
     data.creeps.forEach((creep) => {
-      const role = this.config.roles[creep.memory.roleId];
-      if (role == null) {
+      if (creep.memory.room && creep.room.name != creep.memory.room) {
+        creep.say("bb,loh");
+        creep.moveTo(new RoomPosition(25, 25, creep.memory.room));
+        return;
+      }
+
+      const handler = this.config.roleHandlers[creep.memory.roleId];
+      if (handler == null) {
         console.log("Error: no role in the current creep", creep);
         return;
       }
 
-      role.run(creep);
+      handler.run(creep);
     });
   },
 };

@@ -1,30 +1,24 @@
-import { Color } from "../enums.ts";
+import { Color } from "../../enums.ts";
 
 export const carry: CreepHandler = {
   id: 6,
   name: "carry",
   run: function (creep: Creep) {
-    if (creep.memory.status == "spawned") {
-      const tombstone = creep.pos.findClosestByPath(FIND_TOMBSTONES, {
-        filter: (t) => t.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
-      });
-      if (tombstone) {
-        if (creep.withdraw(tombstone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-          creep.moveTo(tombstone);
-        }
+    if (creep.getStatus() === "spawned") {
+      if (creep.getEnergyFromTombstone()) {
         return;
       }
-      creep.memory.status = "delivering";
+      creep.setStatus("delivering");
     }
 
     if (creep.store.getUsedCapacity() == 0) {
-      creep.memory.targetId = undefined;
-      creep.memory.status = "refilling";
+      creep.setCreepTarget(null);
+      creep.setStatus("refilling");
     }
 
     if (creep.store.getFreeCapacity() == 0) {
-      creep.memory.targetId = undefined;
-      creep.memory.status = "delivering";
+      creep.setCreepTarget(null);
+      creep.setStatus("delivering");
     }
 
     if (creep.memory.status == "refilling") {
@@ -49,20 +43,16 @@ const refillEnergy = (creep: Creep): void => {
       target.store.getUsedCapacity(RESOURCE_ENERGY) < creep.store.getCapacity()
     ) {
       target = null;
+      creep.setCreepTarget(null);
     }
   }
 
   if (!target) {
     target = creep.pos.findClosestByPath<StructureContainer>(FIND_STRUCTURES, {
-      filter: (structure) => {
-        if (structure.structureType === STRUCTURE_CONTAINER) {
-          return (
-            structure.store.getUsedCapacity(RESOURCE_ENERGY) >=
-            creep.store.getCapacity()
-          );
-        }
-        return false;
-      },
+      filter: (structure) =>
+        structure.structureType === STRUCTURE_CONTAINER &&
+        structure.store.getUsedCapacity(RESOURCE_ENERGY) >=
+          creep.store.getCapacity(),
     });
   }
 
@@ -70,7 +60,7 @@ const refillEnergy = (creep: Creep): void => {
     target = creep.room.storage;
   }
 
-  if (target == null) {
+  if (!target) {
     console.log("Error: container for refill not found");
     return;
   }
@@ -82,34 +72,42 @@ const refillEnergy = (creep: Creep): void => {
 };
 
 function deliverEnergy(creep: Creep) {
-  const structures = getFreeStructures(creep.room).sort(
-    (s1, s2) => s1.pos.getRangeTo(creep) - s2.pos.getRangeTo(creep),
-  );
+  let target = creep.getCreepTarget<
+    StructureExtension | StructureSpawn | StructureTower
+  >();
+  if (target && target.store.getFreeCapacity(RESOURCE_ENERGY) == 0) {
+    target = null;
+    creep.setCreepTarget(null);
+  }
 
-  if (structures.length == 0) {
-    creep.memory.targetId = undefined;
-    creep.memory.status = "carrying";
+  if (!target) {
+    target = getFreeStructures(creep.room).sort(
+      (s1, s2) => s1.pos.getRangeTo(creep) - s2.pos.getRangeTo(creep),
+    )[0];
+  }
+
+  if (!target) {
+    creep.setCreepTarget(null);
+    creep.setStatus("carrying");
     return;
   }
 
-  const target = structures[0];
-  if (target != null) {
-    creep.setCreepTarget(target);
-    if (creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-      creep.moveTo(target, {
-        visualizePathStyle: { stroke: Color.ORANGE },
-      });
-    }
+  creep.setCreepTarget(target);
+  if (creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+    creep.moveTo(target, {
+      visualizePathStyle: { stroke: Color.ORANGE },
+    });
   }
 }
 
 function carryEnergy(creep: Creep) {
   const storage = creep.room.storage;
 
-  if (storage == null) {
+  if (!storage) {
     console.log("Error: storage not found");
-    creep.memory.targetId = undefined;
-    creep.memory.status = "delivering";
+
+    creep.setCreepTarget(null);
+    creep.setStatus("delivering");
     return;
   }
 

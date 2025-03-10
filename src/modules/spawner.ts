@@ -1,8 +1,5 @@
-import { repair } from "../creeps/repair.ts";
-import { upgrader } from "../creeps/upgrader.ts";
-import { builder } from "../creeps/builder.ts";
-import { miner } from "../creeps/miner.ts";
-import { carry } from "../creeps/carry.ts";
+import { permanentCreeps } from "../creeps/permanentCreeps.ts";
+// import { permanentCreeps } from "../creeps/permanentCreeps.ts";
 
 export const spawner: BaseModule = {
   create: function () {
@@ -11,154 +8,44 @@ export const spawner: BaseModule = {
         delete Memory.creeps[name];
       }
     }
+    this.config = { creeps: permanentCreeps };
     return this;
   },
   execute: function (data: ModuleData) {
     const spawner = data.room.find(FIND_MY_SPAWNS)[0];
-    if (spawner == undefined) {
-      console.log("Error: no spawn in the current room", data.room);
+    if (!spawner || spawner.spawning != null) {
       return;
     }
 
-    if (spawner.spawning != null) {
-      return;
-    }
+    const pCreeps: PermanentCreeps[] = this.config.creeps[data.room.name];
+    if (!pCreeps) return;
 
-    const permanentCreeps: SpawnCreeps[] = [
-      {
-        generation: 2,
-        handler: repair,
-        body: [
-          WORK,
-          WORK,
-          WORK,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          MOVE,
-          MOVE,
-          MOVE,
-          MOVE,
-        ],
-        limit: 1,
-      },
-      {
-        generation: 3,
-        handler: upgrader,
-        body: [
-          WORK,
-          WORK,
-          WORK,
-          WORK,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          MOVE,
-          MOVE,
-          MOVE,
-          MOVE,
-        ],
-        limit: 4,
-      },
-      {
-        generation: 4,
-        handler: builder,
-        body: [
-          WORK,
-          WORK,
-          WORK,
-          WORK,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          MOVE,
-          MOVE,
-          MOVE,
-          MOVE,
-          MOVE,
-          MOVE,
-        ],
-        limit: 1,
-      },
-      {
-        generation: 5,
-        handler: miner,
-        body: [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE],
-        limit: 4,
-      },
+    for (const pCr of pCreeps) {
+      const count = Object.values(Game.creeps).filter(
+        (cr) =>
+          cr.memory.roleId === pCr.handler.id &&
+          cr.memory.generation === pCr.generation,
+      ).length;
 
-      {
-        generation: 5,
-        handler: carry,
-        body: [
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          CARRY,
-          MOVE,
-          MOVE,
-          MOVE,
-          MOVE,
-          MOVE,
-          MOVE,
-          MOVE,
-          MOVE,
-        ],
-        limit: 1,
-      },
-    ];
-
-    permanentCreeps.forEach((spawnItem) => {
-      let count = 0;
-      data.creeps.forEach((cr) => {
-        if (
-          cr.memory.roleId === spawnItem.handler.id &&
-          cr.memory.generation === spawnItem.generation
-        ) {
-          count++;
+      if (count < pCr.limit) {
+        const body: BodyPartConstant[] = [];
+        for (const b of pCr.body) {
+          for (let i = 0; i < b.count; i++) {
+            body.push(b.body);
+          }
         }
-      });
-      if (count < spawnItem.limit) {
-        const name = `${spawnItem.handler.name}_${spawnItem.generation}_${Game.time}`;
 
-        const res = spawner.spawnCreep(spawnItem.body, name, {
+        const name = `${pCr.handler.name}_${pCr.generation}_${Game.time}`;
+        spawner.spawnCreep(body, name, {
           memory: {
-            status: "spawned", // @todo
-            roleId: spawnItem.handler.id,
-            generation: spawnItem.generation,
+            roleId: pCr.handler.id,
+            generation: pCr.generation,
+            room: pCr.room ? pCr.room : data.room.name,
+            status: "spawned",
           },
         });
-
-        if (res == ERR_NOT_ENOUGH_ENERGY) {
-          console.log(
-            "Error: not enough energy for spawn",
-            spawnItem.handler.name,
-          );
-        }
+        return;
       }
-    });
-
-    // @todo: method find not working
-    //   const name = `${carry.name}_ERROR_${Game.time}`;
-    //   spawner.spawnCreep([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], name, {
-    //     memory: {
-    //       generation: -1,
-    //       stage: "spawned",
-    //       roleId: carry.id,
-    //     },
-    //   });
-    // }
+    }
   },
 };

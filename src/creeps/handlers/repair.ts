@@ -1,4 +1,4 @@
-import { Color } from "../enums.ts";
+import { Color } from "../../enums.ts";
 
 export const repair: CreepHandler = {
   id: 4,

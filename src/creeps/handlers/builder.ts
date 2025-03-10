@@ -1,4 +1,4 @@
-import { Color } from "../enums.ts";
+import { Color } from "../../enums.ts";
 import { repairStructures } from "./repair.ts";
 
 export const builder: CreepHandler = {
