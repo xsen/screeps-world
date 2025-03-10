@@ -16,7 +16,7 @@ declare global {
   }
 
   interface CreepMemory {
-    room?: string;
+    room: string;
     status: string;
     roleId: number;
     generation: number;

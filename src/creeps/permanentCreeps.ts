@@ -3,17 +3,27 @@ import { carry } from "./handlers/carry.ts";
 import { builder } from "./handlers/builder.ts";
 import { upgrader } from "./handlers/upgrader.ts";
 import { repair } from "./handlers/repair.ts";
+import { melee } from "./handlers/melee.ts";
 
 export const permanentCreeps: { [name: string]: PermanentCreeps[] } = {
   E1S37: [
     {
       handler: carry,
       body: [
-        { count: 12, body: CARRY },
-        { count: 8, body: MOVE },
+        { count: 4, body: CARRY },
+        { count: 2, body: MOVE },
       ],
       limit: 1,
-      generation: 5,
+      generation: 1,
+    },
+    {
+      handler: carry,
+      body: [
+        { count: 14, body: CARRY },
+        { count: 7, body: MOVE },
+      ],
+      limit: 1,
+      generation: 10,
     },
     {
       handler: miner,
@@ -23,7 +33,7 @@ export const permanentCreeps: { [name: string]: PermanentCreeps[] } = {
         { count: 1, body: MOVE },
       ],
       limit: 4,
-      generation: 5,
+      generation: 10,
     },
     {
       handler: upgrader,
@@ -32,8 +42,8 @@ export const permanentCreeps: { [name: string]: PermanentCreeps[] } = {
         { count: 4, body: CARRY },
         { count: 4, body: MOVE },
       ],
-      limit: 3,
-      generation: 3,
+      limit: 4,
+      generation: 10,
     },
     {
       handler: repair,
@@ -43,7 +53,7 @@ export const permanentCreeps: { [name: string]: PermanentCreeps[] } = {
         { count: 4, body: MOVE },
       ],
       limit: 1,
-      generation: 2,
+      generation: 10,
     },
     {
       handler: builder,
@@ -52,31 +62,81 @@ export const permanentCreeps: { [name: string]: PermanentCreeps[] } = {
         { count: 4, body: CARRY },
         { count: 4, body: MOVE },
       ],
-      generation: 4,
+      generation: 10,
       limit: 0,
     },
-
     {
       handler: upgrader,
       body: [
-        { count: 2, body: WORK },
+        { count: 4, body: WORK },
         { count: 4, body: CARRY },
-        { count: 3, body: MOVE },
+        { count: 4, body: MOVE },
       ],
-      generation: 10,
+      generation: 11,
       limit: 1,
       room: "E2S37",
     },
     {
       handler: builder,
       body: [
-        { count: 2, body: WORK },
+        { count: 4, body: WORK },
         { count: 4, body: CARRY },
-        { count: 3, body: MOVE },
+        { count: 4, body: MOVE },
       ],
-      generation: 10,
+      generation: 11,
       limit: 1,
       room: "E2S37",
+    },
+  ],
+
+  E2S37: [
+    {
+      handler: melee,
+      body: [
+        { count: 1, body: ATTACK },
+        { count: 1, body: MOVE },
+      ],
+      generation: 20,
+      limit: 0,
+    },
+    {
+      handler: carry,
+      body: [
+        { count: 4, body: CARRY },
+        { count: 2, body: MOVE },
+      ],
+      generation: 20,
+      limit: 1,
+    },
+    {
+      handler: miner,
+      body: [
+        { count: 2, body: WORK },
+        { count: 1, body: CARRY },
+        { count: 1, body: MOVE },
+      ],
+      generation: 20,
+      limit: 2,
+    },
+    {
+      handler: upgrader,
+      body: [
+        { count: 2, body: WORK },
+        { count: 2, body: CARRY },
+        { count: 2, body: MOVE },
+      ],
+      generation: 20,
+      limit: 1,
+    },
+    {
+      handler: builder,
+      body: [
+        { count: 2, body: WORK },
+        { count: 2, body: CARRY },
+        { count: 2, body: MOVE },
+      ],
+      generation: 20,
+      limit: 0,
     },
   ],
 };

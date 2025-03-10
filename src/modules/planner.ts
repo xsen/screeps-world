@@ -3,13 +3,16 @@ import { upgrader } from "../creeps/handlers/upgrader.ts";
 import { miner } from "../creeps/handlers/miner.ts";
 import { carry } from "../creeps/handlers/carry.ts";
 import { builder } from "../creeps/handlers/builder.ts";
+import { Color } from "../enums.ts";
+import { melee } from "../creeps/handlers/melee.ts";
 
 export const planner: BaseModule = {
   config: {
     roleHandlers: {
+      [melee.id]: melee,
       [builder.id]: builder,
-      [repair.id]: repair,
       [upgrader.id]: upgrader,
+      [repair.id]: repair,
       [miner.id]: miner,
       [carry.id]: carry,
     } as const,
@@ -21,7 +24,9 @@ export const planner: BaseModule = {
     data.creeps.forEach((creep) => {
       if (creep.memory.room && creep.room.name != creep.memory.room) {
         creep.say("bb,loh");
-        creep.moveTo(new RoomPosition(25, 25, creep.memory.room));
+        creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {
+          visualizePathStyle: { stroke: Color.GREEN },
+        });
         return;
       }
 

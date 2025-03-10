@@ -1,5 +1,4 @@
 import { permanentCreeps } from "../creeps/permanentCreeps.ts";
-// import { permanentCreeps } from "../creeps/permanentCreeps.ts";
 
 export const spawner: BaseModule = {
   create: function () {
@@ -21,8 +20,10 @@ export const spawner: BaseModule = {
     if (!pCreeps) return;
 
     for (const pCr of pCreeps) {
+      const spawnRoomName = pCr.room ? pCr.room : data.room.name;
       const count = Object.values(Game.creeps).filter(
         (cr) =>
+          cr.memory.room === spawnRoomName &&
           cr.memory.roleId === pCr.handler.id &&
           cr.memory.generation === pCr.generation,
       ).length;
@@ -36,7 +37,7 @@ export const spawner: BaseModule = {
         }
 
         const name = `${pCr.handler.name}_${pCr.generation}_${Game.time}`;
-        spawner.spawnCreep(body, name, {
+        const res = spawner.spawnCreep(body, name, {
           memory: {
             roleId: pCr.handler.id,
             generation: pCr.generation,
@@ -44,6 +45,20 @@ export const spawner: BaseModule = {
             status: "spawned",
           },
         });
+
+        // if (res == ERR_NOT_ENOUGH_ENERGY) {
+        //   console.log(
+        //     "Error: not enough energy for spawn",
+        //     pCr.handler.name,
+        //     "in room",
+        //     data.room.name,
+        //   );
+        // }
+
+        if (res == OK) {
+          console.log("Spawned", pCr.handler.name, "in room", data.room.name);
+        }
+
         return;
       }
     }
