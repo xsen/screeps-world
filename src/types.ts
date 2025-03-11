@@ -23,16 +23,16 @@ declare global {
     targetId?: Id<AnyStructure | Source>;
   }
 
-  interface PermanentCreeps {
+  interface SpawnCreepPlan {
     handler: CreepHandler;
-    body: PermanentCreepsBody[];
+    body: SpawnCreepBody[];
     generation: number;
     limit: number;
     room?: string;
     target?: string;
   }
 
-  interface PermanentCreepsBody {
+  interface SpawnCreepBody {
     count: number;
     body: BodyPartConstant;
   }

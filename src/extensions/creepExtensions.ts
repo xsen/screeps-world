@@ -57,10 +57,11 @@ Creep.prototype.getEnergyFromTombstone = function () {
       return t.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
     },
   });
-  if (tombstone) {
+  if (tombstone && this.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
     if (this.withdraw(tombstone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
       this.moveTo(tombstone);
     }
+    return true;
   }
-  return !!tombstone;
+  return false;
 };

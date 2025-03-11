@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "remote": "tsc && vite build",
-    "local": "tsc && vite build --mode localCopy"
+    "remote": "tsc && vite build --mode rem",
+    "local": "tsc && vite build --mode loc"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.16",

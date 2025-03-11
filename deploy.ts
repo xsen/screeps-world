@@ -41,7 +41,7 @@ export async function publishToApi() {
 export async function publishToLocal() {
   try {
     const modules = getModules();
-    const targetPath = `${process.env.SCREEPS_LOCAL_PATH}/${process.env.SCREEPS_BRANCH}`;
+    const targetPath = `${process.env.SCREEPS_PATH}/${process.env.SCREEPS_BRANCH}`;
     for (let name in modules) {
       fs.writeFileSync(`${targetPath}/${name}.js`, modules[name], {
         encoding: "utf8",

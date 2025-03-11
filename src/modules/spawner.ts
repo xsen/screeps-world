@@ -1,4 +1,4 @@
-import { permanentCreeps } from "../creeps/permanentCreeps.ts";
+import { permanentCreeps } from "../creeps/permanentCreeps";
 
 export const spawner: BaseModule = {
   create: function () {
@@ -16,32 +16,33 @@ export const spawner: BaseModule = {
       return;
     }
 
-    const pCreeps: PermanentCreeps[] = this.config.creeps[data.room.name];
-    if (!pCreeps) return;
+    let spawnCreepPlan: SpawnCreepPlan[] = this.config.creeps[data.room.name];
+    if (!spawnCreepPlan || spawnCreepPlan.length == 0) return;
 
-    for (const pCr of pCreeps) {
-      const spawnRoomName = pCr.room ? pCr.room : data.room.name;
+    spawnCreepPlan = dynamicSpawnCreeps(data.room, spawnCreepPlan);
+    for (const spawnCreep of spawnCreepPlan) {
+      const spawnRoomName = spawnCreep.room ? spawnCreep.room : data.room.name;
       const count = Object.values(Game.creeps).filter(
         (cr) =>
           cr.memory.room === spawnRoomName &&
-          cr.memory.roleId === pCr.handler.id &&
-          cr.memory.generation === pCr.generation,
+          cr.memory.roleId === spawnCreep.handler.id &&
+          cr.memory.generation === spawnCreep.generation,
       ).length;
 
-      if (count < pCr.limit) {
+      if (count < spawnCreep.limit) {
         const body: BodyPartConstant[] = [];
-        for (const b of pCr.body) {
+        for (const b of spawnCreep.body) {
           for (let i = 0; i < b.count; i++) {
             body.push(b.body);
           }
         }
 
-        const name = `${pCr.handler.name}_${pCr.generation}_${Game.time}`;
+        const name = `${spawnCreep.handler.name}_${spawnCreep.generation}_${Game.time}`;
         const res = spawner.spawnCreep(body, name, {
           memory: {
-            roleId: pCr.handler.id,
-            generation: pCr.generation,
-            room: pCr.room ? pCr.room : data.room.name,
+            roleId: spawnCreep.handler.id,
+            generation: spawnCreep.generation,
+            room: spawnCreep.room ? spawnCreep.room : data.room.name,
             status: "spawned",
           },
         });
@@ -56,11 +57,23 @@ export const spawner: BaseModule = {
         // }
 
         if (res == OK) {
-          console.log("Spawned", pCr.handler.name, "in room", data.room.name);
+          console.log(
+            "Spawned",
+            spawnCreep.handler.name,
+            "in room",
+            data.room.name,
+          );
         }
 
         return;
       }
     }
   },
+};
+
+export const dynamicSpawnCreeps = function (
+  _room: Room,
+  permanentCreeps: SpawnCreepPlan[],
+) {
+  return permanentCreeps;
 };

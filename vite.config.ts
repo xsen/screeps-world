@@ -22,9 +22,7 @@ export default defineConfig(({ mode }) => {
             name: "deploy",
             writeBundle: async () => {
               dotenv.config();
-              mode === "localCopy"
-                ? await publishToLocal()
-                : await publishToApi();
+              mode === "loc" ? await publishToLocal() : await publishToApi();
             },
           },
         ],
