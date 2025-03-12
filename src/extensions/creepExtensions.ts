@@ -21,14 +21,17 @@ Creep.prototype.getStatus = function () {
 };
 
 // @todo: refactor
-Creep.prototype.getEnergy = function (range: number = 6) {
-  const containers = this.pos
-    .findInRange(FIND_STRUCTURES, range, {
+Creep.prototype.getEnergy = function () {
+  const containers = this.room
+    .find(FIND_STRUCTURES, {
       filter: (structure) => {
-        if (structure.structureType === STRUCTURE_CONTAINER) {
+        if (
+          structure.structureType == STRUCTURE_CONTAINER ||
+          structure.structureType == STRUCTURE_STORAGE
+        ) {
           return (
             structure.store.getUsedCapacity(RESOURCE_ENERGY) >=
-            this.store.getCapacity()
+            this.store.getFreeCapacity()
           );
         }
         return false;

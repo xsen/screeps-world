@@ -3,7 +3,6 @@ import { carry } from "./handlers/carry.ts";
 import { builder } from "./handlers/builder.ts";
 import { upgrader } from "./handlers/upgrader.ts";
 import { repair } from "./handlers/repair.ts";
-import { melee } from "./handlers/melee.ts";
 
 export const permanentCreeps: { [name: string]: SpawnCreepPlan[] } = {
   E1S37: [
@@ -42,7 +41,7 @@ export const permanentCreeps: { [name: string]: SpawnCreepPlan[] } = {
         { count: 4, body: CARRY },
         { count: 4, body: MOVE },
       ],
-      limit: 4,
+      limit: 3,
       generation: 10,
     },
     {
@@ -91,24 +90,6 @@ export const permanentCreeps: { [name: string]: SpawnCreepPlan[] } = {
 
   E2S37: [
     {
-      handler: melee,
-      body: [
-        { count: 1, body: ATTACK },
-        { count: 1, body: MOVE },
-      ],
-      generation: 20,
-      limit: 0,
-    },
-    {
-      handler: carry,
-      body: [
-        { count: 4, body: CARRY },
-        { count: 2, body: MOVE },
-      ],
-      generation: 20,
-      limit: 1,
-    },
-    {
       handler: miner,
       body: [
         { count: 3, body: WORK },
@@ -119,6 +100,15 @@ export const permanentCreeps: { [name: string]: SpawnCreepPlan[] } = {
       limit: 3,
     },
     {
+      handler: carry,
+      body: [
+        { count: 8, body: CARRY },
+        { count: 4, body: MOVE },
+      ],
+      generation: 20,
+      limit: 1,
+    },
+    {
       handler: upgrader,
       body: [
         { count: 3, body: WORK },
@@ -126,7 +116,7 @@ export const permanentCreeps: { [name: string]: SpawnCreepPlan[] } = {
         { count: 2, body: MOVE },
       ],
       generation: 20,
-      limit: 2,
+      limit: 0,
     },
     {
       handler: builder,

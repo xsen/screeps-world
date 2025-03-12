@@ -23,7 +23,6 @@ export const planner: BaseModule = {
   execute: function (data: ModuleData) {
     data.creeps.forEach((creep) => {
       if (creep.memory.room && creep.room.name != creep.memory.room) {
-        creep.say("bb,loh");
         creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {
           visualizePathStyle: { stroke: Color.GREEN },
         });
