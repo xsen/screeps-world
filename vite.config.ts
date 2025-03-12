@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import { publishToApi, publishToLocal } from "./deploy";
-import dotenv from "dotenv";
 
 export default defineConfig(({ mode }) => {
   return {
@@ -21,7 +20,6 @@ export default defineConfig(({ mode }) => {
           {
             name: "deploy",
             writeBundle: async () => {
-              dotenv.config();
               mode === "loc" ? await publishToLocal() : await publishToApi();
             },
           },

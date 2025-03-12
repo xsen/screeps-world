@@ -1,10 +1,13 @@
-import fs from "fs";
-import path from "path";
 import axios from "axios";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { config } from "dotenv";
 
 interface Modules {
   [key: string]: string;
 }
+
+config();
 
 function getModules(): Modules {
   return {
