@@ -1,7 +1,7 @@
 declare global {
-  interface Creep {
-    creeps: { [name: string]: CreepMemory };
+  var myFunction: (arg?: string) => number;
 
+  interface Creep {
     getEnergy(range?: number): void;
 
     getEnergyFromTombstone(): boolean;

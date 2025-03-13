@@ -57,7 +57,7 @@ Creep.prototype.getEnergy = function () {
 Creep.prototype.getEnergyFromTombstone = function () {
   const tombstone = this.pos.findClosestByPath(FIND_TOMBSTONES, {
     filter: (t) => {
-      return t.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
+      return t.store.getUsedCapacity(RESOURCE_ENERGY) > 0 && t.creep.my;
     },
   });
   if (tombstone && this.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {

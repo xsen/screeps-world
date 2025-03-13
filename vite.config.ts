@@ -5,6 +5,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [],
     build: {
+      sourcemap: true,
       lib: {
         entry: "src/main.ts",
         name: "ScreepsWorld",

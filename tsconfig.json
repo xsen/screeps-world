@@ -8,10 +8,13 @@
     ],
     "skipLibCheck": true,
     /* Bundler mode */
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "allowImportingTsExtensions": true,
-    "isolatedModules": true,
+    "isolatedModules": false,
     "moduleDetection": "force",
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": ".",
     "noEmit": true,
     /* Linting */
     "strict": true,
