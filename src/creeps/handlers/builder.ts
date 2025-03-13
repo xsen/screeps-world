@@ -6,6 +6,13 @@ export const builder: CreepHandler = {
   name: "builder",
 
   run: function (creep: Creep) {
+    if (creep.getStatus() === "spawned") {
+      if (creep.getEnergyFromTombstone()) {
+        return;
+      }
+      creep.setStatus("building");
+    }
+
     if (creep.store.getUsedCapacity() == 0) {
       creep.memory.status = "refilling";
     }
@@ -26,6 +33,7 @@ export const builder: CreepHandler = {
           visualizePathStyle: { stroke: Color.PURPLE },
         });
       }
+
       return;
     }
 

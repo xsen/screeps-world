@@ -102,6 +102,15 @@ export const permanentCreeps: { [name: string]: SpawnCreepPlan[] } = {
     {
       handler: carry,
       body: [
+        { count: 4, body: CARRY },
+        { count: 2, body: MOVE },
+      ],
+      generation: 19,
+      limit: 1,
+    },
+    {
+      handler: carry,
+      body: [
         { count: 8, body: CARRY },
         { count: 4, body: MOVE },
       ],
@@ -116,7 +125,7 @@ export const permanentCreeps: { [name: string]: SpawnCreepPlan[] } = {
         { count: 2, body: MOVE },
       ],
       generation: 20,
-      limit: 0,
+      limit: 1,
     },
     {
       handler: builder,

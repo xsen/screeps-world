@@ -10,6 +10,13 @@ export const upgrader: CreepHandler = {
       return;
     }
 
+    if (creep.getStatus() === "spawned") {
+      if (creep.getEnergyFromTombstone()) {
+        return;
+      }
+      creep.setStatus("upgrading");
+    }
+
     if (creep.store.getUsedCapacity() == 0) {
       creep.memory.status = "refilling";
     }
@@ -22,10 +29,9 @@ export const upgrader: CreepHandler = {
       return;
     }
 
-    if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
-      creep.moveTo(creep.room.controller, {
-        visualizePathStyle: { stroke: Color.YELLOW },
-      });
-    }
+    creep.upgradeController(creep.room.controller);
+    creep.moveTo(creep.room.controller, {
+      visualizePathStyle: { stroke: Color.YELLOW },
+    });
   },
 };

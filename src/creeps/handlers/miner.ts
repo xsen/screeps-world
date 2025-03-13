@@ -20,7 +20,10 @@ export const miner: CreepHandler = {
         break;
       case "harvesting":
         if (creep.memory.targetId == undefined) {
-          console.log("Error: no target in the current creep", creep.name);
+          console.log(
+            "Error miner: no target in the current creep",
+            creep.name,
+          );
           break;
         }
 
@@ -29,7 +32,7 @@ export const miner: CreepHandler = {
           const target = Game.getObjectById<Source>(creep.memory.targetId);
 
           if (target == null) {
-            console.log("Error: source not found", creep.memory.targetId);
+            console.log("Error miner: source not found", creep.memory.targetId);
             break;
           }
 
@@ -47,7 +50,7 @@ export const miner: CreepHandler = {
       case "transferring":
         const container = getContainer(creep);
         if (container == null) {
-          console.log("Error: container not found", creep.room.name);
+          console.log("Error miner: container not found", creep.room.name);
           break;
         }
 
