@@ -36,8 +36,8 @@ declare global {
     body: SpawnCreepBody[];
     generation: number;
     limit: number;
-    room?: string;
     target?: string;
+    targetRoom?: string;
     commands?: CreepCommand[];
   }
 

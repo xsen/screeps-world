@@ -22,7 +22,7 @@ export const spawner: BaseModule = {
     roomSpawnPlans = dynamicSpawnCreepPlan(data.room, roomSpawnPlans);
     for (const spawnPlan of roomSpawnPlans) {
       const spawnRoomName =
-        spawnPlan.room != null ? spawnPlan.room : data.room.name;
+        spawnPlan.targetRoom != null ? spawnPlan.targetRoom : data.room.name;
       const count = Object.values(Game.creeps).filter(
         (cr) =>
           cr.memory.room === spawnRoomName &&
@@ -43,7 +43,10 @@ export const spawner: BaseModule = {
           memory: {
             roleId: spawnPlan.handler.id,
             generation: spawnPlan.generation,
-            room: spawnPlan.room != null ? spawnPlan.room : data.room.name,
+            room:
+              spawnPlan.targetRoom != null
+                ? spawnPlan.targetRoom
+                : data.room.name,
             status: "spawned",
             commands: spawnPlan.commands,
           },

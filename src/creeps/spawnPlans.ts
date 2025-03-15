@@ -11,6 +11,26 @@ import { specialist } from "./roles/specialist.ts";
 export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
   E1S37: [
     {
+      targetRoom: "",
+      handler: command,
+      body: [
+        { count: 2, body: CARRY },
+        { count: 2, body: MOVE },
+      ],
+      limit: 0,
+      generation: 1,
+      commands: [
+        {
+          target: new RoomPosition(43, 20, "E1S37"),
+          handler: withdraw,
+        },
+        {
+          target: new RoomPosition(28, 24, "E2S37"),
+          handler: transfer,
+        },
+      ],
+    },
+    {
       handler: carry,
       body: [
         { count: 4, body: CARRY },
@@ -77,7 +97,7 @@ export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
       ],
       generation: 11,
       limit: 1,
-      room: "E2S37",
+      targetRoom: "E2S37",
     },
     {
       handler: builder,
@@ -88,7 +108,7 @@ export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
       ],
       generation: 11,
       limit: 1,
-      room: "E2S37",
+      targetRoom: "E2S37",
     },
     {
       handler: specialist,
@@ -99,7 +119,7 @@ export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
       ],
       generation: 1,
       limit: 2,
-      room: "",
+      targetRoom: "",
     },
   ],
 
@@ -160,7 +180,7 @@ export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
         { count: 5, body: MOVE },
       ],
       generation: 20,
-      limit: 1,
+      limit: 0,
     },
   ],
   sim: [
