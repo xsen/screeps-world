@@ -1,10 +1,14 @@
-import { miner } from "./handlers/miner.ts";
-import { carry } from "./handlers/carry.ts";
-import { builder } from "./handlers/builder.ts";
-import { upgrader } from "./handlers/upgrader.ts";
-import { repair } from "./handlers/repair.ts";
+import { repair } from "./roles/repair.ts";
+import { builder } from "./roles/builder.ts";
+import { upgrader } from "./roles/upgrader.ts";
+import { carry } from "./roles/carry.ts";
+import { miner } from "./roles/miner.ts";
+import { withdraw } from "./commands/withdraw.ts";
+import { transfer } from "./commands/transfer.ts";
+import { command } from "./roles/command.ts";
+import { specialist } from "./roles/specialist.ts";
 
-export const permanentCreeps: { [name: string]: SpawnCreepPlan[] } = {
+export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
   E1S37: [
     {
       handler: carry,
@@ -86,6 +90,17 @@ export const permanentCreeps: { [name: string]: SpawnCreepPlan[] } = {
       limit: 1,
       room: "E2S37",
     },
+    {
+      handler: specialist,
+      body: [
+        { count: 2, body: WORK },
+        { count: 4, body: CARRY },
+        { count: 6, body: MOVE },
+      ],
+      generation: 1,
+      limit: 2,
+      room: "",
+    },
   ],
 
   E2S37: [
@@ -146,6 +161,48 @@ export const permanentCreeps: { [name: string]: SpawnCreepPlan[] } = {
       ],
       generation: 20,
       limit: 1,
+    },
+  ],
+  sim: [
+    {
+      handler: command,
+      body: [
+        { count: 1, body: WORK },
+        { count: 1, body: CARRY },
+        { count: 1, body: MOVE },
+      ],
+      limit: 1,
+      generation: 1,
+      commands: [
+        {
+          target: new RoomPosition(25, 25, "sim"),
+          handler: withdraw,
+        },
+        {
+          target: new RoomPosition(25, 25, "sim"),
+          handler: transfer,
+        },
+      ],
+    },
+    {
+      handler: builder,
+      body: [
+        { count: 1, body: WORK },
+        { count: 1, body: CARRY },
+        { count: 1, body: MOVE },
+      ],
+      limit: 1,
+      generation: 1,
+    },
+    {
+      handler: upgrader,
+      body: [
+        { count: 1, body: WORK },
+        { count: 1, body: CARRY },
+        { count: 1, body: MOVE },
+      ],
+      limit: 1,
+      generation: 1,
     },
   ],
 };

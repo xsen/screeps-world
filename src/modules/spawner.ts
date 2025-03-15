@@ -1,4 +1,4 @@
-import { permanentCreeps } from "../creeps/permanentCreeps";
+import { spawnPlans } from "../creeps/spawnPlans.ts";
 
 export const spawner: BaseModule = {
   create: function () {
@@ -7,7 +7,7 @@ export const spawner: BaseModule = {
         delete Memory.creeps[name];
       }
     }
-    this.config = { creeps: permanentCreeps };
+
     return this;
   },
   execute: function (data: ModuleData) {
@@ -16,64 +16,56 @@ export const spawner: BaseModule = {
       return;
     }
 
-    let spawnCreepPlan: SpawnCreepPlan[] = this.config.creeps[data.room.name];
-    if (!spawnCreepPlan || spawnCreepPlan.length == 0) return;
+    let roomSpawnPlans: RoomSpawnPlan[] = spawnPlans[data.room.name];
+    if (!roomSpawnPlans || roomSpawnPlans.length == 0) return;
 
-    spawnCreepPlan = dynamicSpawnCreeps(data.room, spawnCreepPlan);
-    for (const spawnCreep of spawnCreepPlan) {
-      const spawnRoomName = spawnCreep.room ? spawnCreep.room : data.room.name;
+    roomSpawnPlans = dynamicSpawnCreepPlan(data.room, roomSpawnPlans);
+    for (const spawnPlan of roomSpawnPlans) {
+      const spawnRoomName =
+        spawnPlan.room != null ? spawnPlan.room : data.room.name;
       const count = Object.values(Game.creeps).filter(
         (cr) =>
           cr.memory.room === spawnRoomName &&
-          cr.memory.roleId === spawnCreep.handler.id &&
-          cr.memory.generation === spawnCreep.generation,
+          cr.memory.roleId === spawnPlan.handler.id &&
+          cr.memory.generation === spawnPlan.generation,
       ).length;
 
-      if (count < spawnCreep.limit) {
+      if (count < spawnPlan.limit) {
         const body: BodyPartConstant[] = [];
-        for (const b of spawnCreep.body) {
+        for (const b of spawnPlan.body) {
           for (let i = 0; i < b.count; i++) {
             body.push(b.body);
           }
         }
 
-        const name = `${spawnCreep.handler.name}_${spawnCreep.generation}_${Game.time}`;
+        const name = `${spawnPlan.handler.name}-${spawnPlan.generation}_${Game.time}`;
         const res = spawner.spawnCreep(body, name, {
           memory: {
-            roleId: spawnCreep.handler.id,
-            generation: spawnCreep.generation,
-            room: spawnCreep.room ? spawnCreep.room : data.room.name,
+            roleId: spawnPlan.handler.id,
+            generation: spawnPlan.generation,
+            room: spawnPlan.room != null ? spawnPlan.room : data.room.name,
             status: "spawned",
+            commands: spawnPlan.commands,
           },
         });
-
-        // if (res == ERR_NOT_ENOUGH_ENERGY) {
-        //   console.log(
-        //     "Error: not enough energy for spawn",
-        //     pCr.handler.name,
-        //     "in room",
-        //     data.room.name,
-        //   );
-        // }
 
         if (res == OK) {
           console.log(
             "Spawned",
-            spawnCreep.handler.name,
+            spawnPlan.handler.name,
             "in room",
             data.room.name,
           );
         }
-
         return;
       }
     }
   },
 };
 
-export const dynamicSpawnCreeps = function (
+export const dynamicSpawnCreepPlan = function (
   _room: Room,
-  permanentCreeps: SpawnCreepPlan[],
+  permanentCreeps: RoomSpawnPlan[],
 ) {
   return permanentCreeps;
 };

@@ -1,7 +1,7 @@
 import { Color } from "../../enums.ts";
 import { repairStructures } from "./repair.ts";
 
-export const builder: CreepHandler = {
+export const builder: CreepRoleHandler = {
   id: 2,
   name: "builder",
 

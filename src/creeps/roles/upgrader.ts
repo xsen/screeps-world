@@ -1,6 +1,6 @@
 import { Color } from "../../enums.ts";
 
-export const upgrader: CreepHandler = {
+export const upgrader: CreepRoleHandler = {
   id: 3,
   name: "upgrader",
 

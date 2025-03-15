@@ -1,7 +1,13 @@
 declare global {
   var myFunction: (arg?: string) => number;
 
+  interface Memory {
+    log: any;
+  }
+
   interface Creep {
+    memory: CreepMemory;
+
     getEnergy(range?: number): void;
 
     getEnergyFromTombstone(): boolean;
@@ -21,15 +27,18 @@ declare global {
     roleId: number;
     generation: number;
     targetId?: Id<AnyStructure | Source>;
+    commands?: CreepCommand[];
+    commandId?: number;
   }
 
-  interface SpawnCreepPlan {
-    handler: CreepHandler;
+  interface RoomSpawnPlan {
+    handler: CreepRoleHandler;
     body: SpawnCreepBody[];
     generation: number;
     limit: number;
     room?: string;
     target?: string;
+    commands?: CreepCommand[];
   }
 
   interface SpawnCreepBody {
@@ -38,7 +47,6 @@ declare global {
   }
 
   interface BaseModule {
-    config?: any;
     create: () => BaseModule;
     execute: (data: ModuleData) => void;
   }
@@ -48,10 +56,25 @@ declare global {
     creeps: Creep[];
   }
 
-  interface CreepHandler {
+  interface CreepRoleHandler {
     id: number;
     name: string;
     stage?: string;
     run: (creep: Creep) => void;
+  }
+
+  interface CreepCommand {
+    target?: RoomPosition;
+    handler: CreepCommandHandler;
+  }
+
+  interface CreepCommandHandler {
+    id: string;
+    /**
+     * @param creep the creep to run command
+     * @param position the target of the command
+     * @returns true if command is finished
+     */
+    run: (creep: Creep, position: RoomPosition) => boolean;
   }
 }

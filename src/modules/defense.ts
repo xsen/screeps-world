@@ -1,5 +1,4 @@
 export const defense: BaseModule = {
-  config: {},
   create: function () {
     return this;
   },
