@@ -6,30 +6,10 @@ import { miner } from "./roles/miner.ts";
 import { withdraw } from "./commands/withdraw.ts";
 import { transfer } from "./commands/transfer.ts";
 import { command } from "./roles/command.ts";
-import { specialist } from "./roles/specialist.ts";
+import { harvest } from "./commands/harvest.ts";
 
 export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
   E1S37: [
-    {
-      targetRoom: "",
-      handler: command,
-      body: [
-        { count: 2, body: CARRY },
-        { count: 2, body: MOVE },
-      ],
-      limit: 0,
-      generation: 1,
-      commands: [
-        {
-          target: new RoomPosition(43, 20, "E1S37"),
-          handler: withdraw,
-        },
-        {
-          target: new RoomPosition(28, 24, "E2S37"),
-          handler: transfer,
-        },
-      ],
-    },
     {
       handler: carry,
       body: [
@@ -65,7 +45,7 @@ export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
         { count: 4, body: CARRY },
         { count: 4, body: MOVE },
       ],
-      limit: 3,
+      limit: 4,
       generation: 10,
     },
     {
@@ -111,15 +91,45 @@ export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
       targetRoom: "E2S37",
     },
     {
-      handler: specialist,
+      targetRoom: "",
+      handler: command,
+      body: [
+        { count: 2, body: CARRY },
+        { count: 2, body: MOVE },
+      ],
+      limit: 0,
+      generation: 1,
+      commands: [
+        {
+          target: new RoomPosition(43, 20, "E1S37"),
+          handler: withdraw,
+        },
+        {
+          target: new RoomPosition(28, 24, "E2S37"),
+          handler: transfer,
+        },
+      ],
+    },
+    {
+      targetRoom: "",
+      handler: command,
       body: [
         { count: 2, body: WORK },
         { count: 4, body: CARRY },
         { count: 6, body: MOVE },
       ],
-      generation: 1,
       limit: 2,
-      targetRoom: "",
+      generation: 2,
+      commands: [
+        {
+          target: new RoomPosition(15, 38, "E1S36"),
+          handler: harvest,
+        },
+        {
+          target: new RoomPosition(43, 20, "E1S37"),
+          handler: transfer,
+        },
+      ],
     },
   ],
 
@@ -182,6 +192,27 @@ export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
       generation: 20,
       limit: 0,
     },
+    {
+      targetRoom: "",
+      handler: command,
+      body: [
+        { count: 2, body: WORK },
+        { count: 4, body: CARRY },
+        { count: 6, body: MOVE },
+      ],
+      limit: 2,
+      generation: 3,
+      commands: [
+        {
+          target: new RoomPosition(15, 24, "E2S36"),
+          handler: harvest,
+        },
+        {
+          target: new RoomPosition(28, 24, "E2S37"),
+          handler: transfer,
+        },
+      ],
+    },
   ],
   sim: [
     {
@@ -203,26 +234,6 @@ export const spawnPlans: { [name: string]: RoomSpawnPlan[] } = {
           handler: transfer,
         },
       ],
-    },
-    {
-      handler: builder,
-      body: [
-        { count: 1, body: WORK },
-        { count: 1, body: CARRY },
-        { count: 1, body: MOVE },
-      ],
-      limit: 1,
-      generation: 1,
-    },
-    {
-      handler: upgrader,
-      body: [
-        { count: 1, body: WORK },
-        { count: 1, body: CARRY },
-        { count: 1, body: MOVE },
-      ],
-      limit: 1,
-      generation: 1,
     },
   ],
 };

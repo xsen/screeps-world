@@ -38,7 +38,7 @@ export const spawner: BaseModule = {
           }
         }
 
-        const name = `${spawnPlan.handler.name}-${spawnPlan.generation}_${Game.time}`;
+        const name = `${spawnPlan.handler.name}-${spawnPlan.generation}-${Game.time}`;
         const res = spawner.spawnCreep(body, name, {
           memory: {
             roleId: spawnPlan.handler.id,

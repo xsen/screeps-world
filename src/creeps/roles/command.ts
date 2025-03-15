@@ -1,5 +1,4 @@
-import { withdraw } from "../commands/withdraw.ts";
-import { transfer } from "../commands/transfer.ts";
+import { commands } from "../commands.ts";
 
 export const command: CreepRoleHandler = {
   id: 8,
@@ -24,12 +23,7 @@ export const command: CreepRoleHandler = {
       return;
     }
 
-    const allCommands: { [id: string]: CreepCommandHandler } = {
-      [withdraw.id]: withdraw,
-      [transfer.id]: transfer,
-    };
-
-    const handler = allCommands[creepMemoryCommands.handler.id];
+    const handler = commands[creepMemoryCommands.handler.id];
     const position = new RoomPosition(
       creepMemoryCommands.target.x,
       creepMemoryCommands.target.y,
