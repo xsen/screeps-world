@@ -1,5 +1,5 @@
-import { defense } from "./modules/defense.ts";
 import "./extensions/creepExtensions.ts";
+import { defense } from "./modules/defense.ts";
 import { spawner } from "./modules/spawner.ts";
 import { planner } from "./modules/planner.ts";
 

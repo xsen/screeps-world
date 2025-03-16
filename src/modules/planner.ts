@@ -14,7 +14,7 @@ export const planner: BaseModule = {
         return;
       }
 
-      const handler = roles[creep.memory.roleId];
+      const handler = roles.get(creep.memory.roleId);
       if (handler == null) {
         console.log("Error: no role in the current creep", creep);
         return;

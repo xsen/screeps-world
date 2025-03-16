@@ -10,7 +10,7 @@
     /* Bundler mode */
     "moduleResolution": "node",
     "allowImportingTsExtensions": true,
-    "isolatedModules": false,
+    "isolatedModules": true,
     "moduleDetection": "force",
     "sourceMap": true,
     "inlineSources": true,

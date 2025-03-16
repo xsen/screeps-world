@@ -32,7 +32,7 @@ declare global {
   }
 
   interface RoomSpawnPlan {
-    handler: CreepRoleHandler;
+    handlerId: number;
     body: SpawnCreepBody[];
     generation: number;
     limit: number;

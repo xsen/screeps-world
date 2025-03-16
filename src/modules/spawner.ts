@@ -1,4 +1,5 @@
 import { spawnPlans } from "../creeps/spawnPlans.ts";
+import { roles } from "../creeps/roles.ts";
 
 export const spawner: BaseModule = {
   create: function () {
@@ -16,17 +17,23 @@ export const spawner: BaseModule = {
       return;
     }
 
-    let roomSpawnPlans: RoomSpawnPlan[] = spawnPlans[data.room.name];
+    let roomSpawnPlans: RoomSpawnPlan[] = spawnPlans.get(data.room.name) || [];
     if (!roomSpawnPlans || roomSpawnPlans.length == 0) return;
 
     roomSpawnPlans = dynamicSpawnCreepPlan(data.room, roomSpawnPlans);
     for (const spawnPlan of roomSpawnPlans) {
+      const handler = roles.get(spawnPlan.handlerId);
+      if (handler == null) {
+        console.log("Error: no role in the current spawn plan", spawnPlan);
+        return;
+      }
+
       const spawnRoomName =
         spawnPlan.targetRoom != null ? spawnPlan.targetRoom : data.room.name;
       const count = Object.values(Game.creeps).filter(
         (cr) =>
           cr.memory.room === spawnRoomName &&
-          cr.memory.roleId === spawnPlan.handler.id &&
+          cr.memory.roleId === handler.id &&
           cr.memory.generation === spawnPlan.generation,
       ).length;
 
@@ -38,10 +45,10 @@ export const spawner: BaseModule = {
           }
         }
 
-        const name = `${spawnPlan.handler.name}-${spawnPlan.generation}-${Game.time}`;
+        const name = `${handler.name}-${spawnPlan.generation}-${Game.time}`;
         const res = spawner.spawnCreep(body, name, {
           memory: {
-            roleId: spawnPlan.handler.id,
+            roleId: handler.id,
             generation: spawnPlan.generation,
             room:
               spawnPlan.targetRoom != null
@@ -53,12 +60,7 @@ export const spawner: BaseModule = {
         });
 
         if (res == OK) {
-          console.log(
-            "Spawned",
-            spawnPlan.handler.name,
-            "in room",
-            data.room.name,
-          );
+          console.log("Spawned", handler.name, "in room", data.room.name);
         }
         return;
       }
