@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
         entry: "src/main.ts",
         name: "ScreepsWorld",
         fileName: "main",
-        formats: ["cjs"],
+        formats: ["umd"],
       },
       rollupOptions: {
         external: [],

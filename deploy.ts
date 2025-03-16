@@ -11,7 +11,10 @@ config();
 
 function getModules(): Modules {
   return {
-    main: fs.readFileSync(path.resolve(__dirname, "dist/main.cjs"), "utf-8"),
+    main: fs.readFileSync(
+      path.resolve(__dirname, "dist/main.umd.cjs"),
+      "utf-8",
+    ),
     // 'utils': fs.readFileSync(path.resolve(__dirname, 'dist/utils.js'), 'utf-8'),
   };
 }
