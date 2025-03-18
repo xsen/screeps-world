@@ -1,7 +1,7 @@
 import { Color } from "../../enums.ts";
 
 export const upgrade: CreepCommandHandler = {
-  id: "transfer",
+  id: "upgrade",
   run: function (creep, position) {
     if (creep.room.name != position.roomName) {
       creep.moveTo(position, {

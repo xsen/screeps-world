@@ -22,7 +22,9 @@ export const miner: CreepRoleHandler = {
       const harvestRes = creep.harvest(source);
       if (harvestRes == ERR_NOT_IN_RANGE) {
         delete creep.memory.nearbyContainerId;
-        creep.moveTo(source, { visualizePathStyle: { stroke: Color.GRAY } });
+        creep.customMoveTo(source, {
+          visualizePathStyle: { stroke: Color.GRAY },
+        });
       }
 
       if (
@@ -55,7 +57,9 @@ export const miner: CreepRoleHandler = {
 
       if (creep.transfer(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
         delete creep.memory.nearbyContainerId;
-        creep.moveTo(container, { visualizePathStyle: { stroke: Color.GRAY } });
+        creep.customMoveTo(container, {
+          visualizePathStyle: { stroke: Color.GRAY },
+        });
       }
     }
   },
@@ -64,14 +68,19 @@ export const miner: CreepRoleHandler = {
 const getNearbyContainer = (creep: Creep): StructureContainer | null => {
   const container = creep.memory.nearbyContainerId
     ? Game.getObjectById<StructureContainer>(creep.memory.nearbyContainerId)
-    : creep.pos
-        .findInRange(FIND_STRUCTURES, 1)
-        .find((s) => s.structureType == STRUCTURE_CONTAINER);
+    : (creep.pos.findInRange(FIND_STRUCTURES, 1).find((s) => {
+        return (
+          s.structureType === STRUCTURE_CONTAINER &&
+          (s as StructureContainer).store.getFreeCapacity() > 0
+        );
+      }) as StructureContainer | undefined);
 
-  if (container) {
+  if (container && container.store.getFreeCapacity() > 0) {
     creep.memory.nearbyContainerId = container.id;
     return container;
   }
+
+  delete creep.memory.nearbyContainerId;
   return null;
 };
 

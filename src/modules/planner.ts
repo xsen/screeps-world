@@ -1,11 +1,11 @@
 import { Color } from "../enums.ts";
 import { roles } from "../creeps/roles.ts";
 
-export const planner: BaseModule = {
+export const planner: RoomModule = {
   create: function () {
     return this;
   },
-  execute: function (data: ModuleData) {
+  execute: function (data: RoomModuleData) {
     data.creeps.forEach((creep) => {
       if (creep.memory.room && creep.room.name != creep.memory.room) {
         creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {

@@ -1,8 +1,8 @@
-export const defense: BaseModule = {
+export const defense: RoomModule = {
   create: function () {
     return this;
   },
-  execute: (data: ModuleData) => {
+  execute: (data: RoomModuleData) => {
     const towers = data.room.find(FIND_STRUCTURES, {
       filter: (s) => s.structureType === STRUCTURE_TOWER,
     });

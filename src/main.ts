@@ -1,23 +1,34 @@
-import "./extensions/creepExtensions.ts";
+import "./extensions/Creep.ts";
+
 import { defense } from "./modules/defense.ts";
 import { spawner } from "./modules/spawner.ts";
 import { planner } from "./modules/planner.ts";
+import { flags } from "./modules/flags.ts";
 
 export const loop = () => {
   spawner.create();
   defense.create();
   planner.create();
 
-  Object.values(Game.rooms).forEach((room) => {
+  for (const roomName in Game.rooms) {
+    const room = Game.rooms[roomName];
+
     const data = {
       room: room,
       creeps: room.find(FIND_MY_CREEPS),
     };
 
     defense.execute(data);
-    spawner.execute(data);
     planner.execute(data);
-  });
+
+    if (room.controller?.my) {
+      spawner.execute(data);
+    }
+  }
+
+  if (Game.time % 99 === 0) {
+    flags.create().execute();
+  }
 
   if (Game.time % 10 === 0) {
     updateStats();

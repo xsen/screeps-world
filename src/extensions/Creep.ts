@@ -20,6 +20,34 @@ Creep.prototype.getStatus = function () {
   return this.memory.status;
 };
 
+Creep.prototype.customMoveTo = function (
+  target: RoomPosition | { pos: RoomPosition },
+  opts?: MoveToOpts,
+): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND {
+  const avoidPosition = Memory.avoidPositions?.[this.room.name];
+  if (avoidPosition) {
+    opts = opts || {};
+
+    const originalCostCallback = opts.costCallback;
+    opts.costCallback = (
+      roomName: string,
+      costMatrix: CostMatrix,
+    ): CostMatrix => {
+      if (originalCostCallback) {
+        const result = originalCostCallback(roomName, costMatrix);
+        if (result) costMatrix = result;
+      }
+
+      const avoid = Memory.avoidPositions?.[roomName];
+      avoid?.forEach((pos) => costMatrix.set(pos.x, pos.y, 255));
+
+      return costMatrix;
+    };
+  }
+
+  return this.moveTo(target, opts);
+};
+
 // @todo: refactor
 Creep.prototype.getEnergy = function () {
   const containers = this.room

@@ -67,7 +67,7 @@ const refillEnergy = (creep: Creep): void => {
 
   creep.setCreepTarget(target);
   if (creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-    creep.moveTo(target, { visualizePathStyle: { stroke: Color.GRAY } });
+    creep.customMoveTo(target, { visualizePathStyle: { stroke: Color.GRAY } });
   }
 };
 
@@ -94,17 +94,23 @@ function deliverEnergy(creep: Creep) {
 
   creep.setCreepTarget(target);
   if (creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-    creep.moveTo(target, {
+    creep.customMoveTo(target, {
       visualizePathStyle: { stroke: Color.ORANGE },
     });
   }
 }
 
 function carryEnergy(creep: Creep) {
+  if (creep.room.controller && creep.room.controller.level < 4) {
+    creep.setCreepTarget(null);
+    creep.setStatus("delivering");
+    return;
+  }
+
   const storage = creep.room.storage;
 
   if (!storage) {
-    console.log("Error: storage not found");
+    console.log("Error carry: storage not found");
 
     creep.setCreepTarget(null);
     creep.setStatus("delivering");
@@ -112,7 +118,7 @@ function carryEnergy(creep: Creep) {
   }
 
   if (creep.transfer(storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-    creep.moveTo(storage, {
+    creep.customMoveTo(storage, {
       visualizePathStyle: { stroke: Color.ORANGE },
     });
   }

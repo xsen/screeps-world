@@ -1,7 +1,7 @@
 import { spawnPlans } from "../creeps/spawnPlans.ts";
 import { roles } from "../creeps/roles.ts";
 
-export const spawner: BaseModule = {
+export const spawner: RoomModule = {
   create: function () {
     if (Game.time % 10 == 0) {
       for (const name in Memory.creeps) {
@@ -13,7 +13,7 @@ export const spawner: BaseModule = {
 
     return this;
   },
-  execute: function (data: ModuleData) {
+  execute: function (data: RoomModuleData) {
     const spawner = data.room.find(FIND_MY_SPAWNS)[0];
     if (!spawner || spawner.spawning != null) {
       return;
@@ -32,6 +32,7 @@ export const spawner: BaseModule = {
 
       const spawnRoomName =
         spawnPlan.targetRoom != null ? spawnPlan.targetRoom : data.room.name;
+
       const count = Object.values(Game.creeps).filter(
         (cr) =>
           cr.memory.room === spawnRoomName &&
@@ -52,17 +53,16 @@ export const spawner: BaseModule = {
           memory: {
             roleId: handler.id,
             generation: spawnPlan.generation,
-            room:
-              spawnPlan.targetRoom != null
-                ? spawnPlan.targetRoom
-                : data.room.name,
+            room: spawnRoomName,
             status: "spawned",
             commands: spawnPlan.commands,
           },
         });
 
         if (res == OK) {
-          console.log("Spawned", handler.name, "in room", data.room.name);
+          console.log(
+            `Spawning ${handler.name}-${spawnPlan.generation} in ${data.room.name} for target room "${spawnRoomName}"`,
+          );
         }
         return;
       }

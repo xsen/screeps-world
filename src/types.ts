@@ -1,6 +1,7 @@
 declare global {
   interface Memory {
     log: any;
+    avoidPositions: { [roomName: string]: RoomPosition[] };
   }
 
   interface RoomStats {
@@ -55,6 +56,15 @@ declare global {
     getCreepTarget<T extends AnyStructure | Source>(): T | null;
 
     setCreepTarget(target: AnyStructure | Source | null): void;
+
+    customMoveTo(
+      target:
+        | RoomPosition
+        | {
+            pos: RoomPosition;
+          },
+      opts?: MoveToOpts,
+    ): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND;
   }
 
   interface CreepMemory {
@@ -83,12 +93,17 @@ declare global {
     body: BodyPartConstant;
   }
 
-  interface BaseModule {
-    create: () => BaseModule;
-    execute: (data: ModuleData) => void;
+  interface GlobalModule {
+    create: () => GlobalModule;
+    execute: () => void;
   }
 
-  interface ModuleData {
+  interface RoomModule {
+    create: () => RoomModule;
+    execute: (data: RoomModuleData) => void;
+  }
+
+  interface RoomModuleData {
     room: Room;
     creeps: Creep[];
   }
