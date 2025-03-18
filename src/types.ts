@@ -65,6 +65,7 @@ declare global {
     targetId?: Id<AnyStructure | Source>;
     commands?: CreepCommand[];
     commandId?: number;
+    nearbyContainerId?: Id<StructureContainer>;
   }
 
   interface RoomSpawnPlan {

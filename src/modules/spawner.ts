@@ -3,9 +3,11 @@ import { roles } from "../creeps/roles.ts";
 
 export const spawner: BaseModule = {
   create: function () {
-    for (const name in Memory.creeps) {
-      if (!(name in Game.creeps)) {
-        delete Memory.creeps[name];
+    if (Game.time % 10 == 0) {
+      for (const name in Memory.creeps) {
+        if (!(name in Game.creeps)) {
+          delete Memory.creeps[name];
+        }
       }
     }
 

@@ -4,72 +4,82 @@ export const miner: CreepRoleHandler = {
   id: 5,
   name: "miner",
   run: function (creep: Creep) {
-    switch (creep.memory.status) {
-      case "spawned":
-        const target = getSource(creep);
-        if (target == null) {
-          console.log("Error: no source in the current room", creep.room.name);
-          break;
+    if (creep.store.getFreeCapacity() == 0) {
+      creep.setStatus("transferring");
+    }
+    if (creep.store.getUsedCapacity() == 0) {
+      creep.setStatus("harvesting");
+    }
+
+    if (creep.getStatus() == "harvesting") {
+      const source = getTargetSource(creep);
+
+      if (source == null) {
+        console.log("Error miner: source not found", creep.memory.targetId);
+        return;
+      }
+
+      const harvestRes = creep.harvest(source);
+      if (harvestRes == ERR_NOT_IN_RANGE) {
+        delete creep.memory.nearbyContainerId;
+        creep.moveTo(source, { visualizePathStyle: { stroke: Color.GRAY } });
+      }
+
+      if (
+        harvestRes == OK &&
+        Game.time % 2 == 0 &&
+        creep.store.getUsedCapacity(RESOURCE_ENERGY) > 25
+      ) {
+        const container = getNearbyContainer(creep);
+        if (container) {
+          creep.transfer(container, RESOURCE_ENERGY);
         }
+      }
+    }
 
-        creep.memory.status = "harvesting";
-        creep.setCreepTarget(target);
-
-        creep.moveTo(target, { visualizePathStyle: { stroke: Color.GRAY } });
-
-        break;
-      case "harvesting":
-        if (creep.memory.targetId == undefined) {
-          console.log(
-            "Error miner: no target in the current creep",
-            creep.name,
+    if (creep.getStatus() == "transferring") {
+      const container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+        filter: (structure) => {
+          return (
+            structure.structureType == STRUCTURE_CONTAINER &&
+            structure.store.getFreeCapacity(RESOURCE_ENERGY) >
+              creep.store.getUsedCapacity(RESOURCE_ENERGY)
           );
-          break;
-        }
+        },
+      });
 
-        if (creep.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
-          // creep.say("⚡ min: download");
-          const target = Game.getObjectById<Source>(creep.memory.targetId);
+      if (container == null) {
+        console.log("Error miner: container not found");
+        return;
+      }
 
-          if (target == null) {
-            console.log("Error miner: source not found", creep.memory.targetId);
-            break;
-          }
-
-          if (creep.harvest(target) == ERR_NOT_IN_RANGE) {
-            creep.moveTo(target, {
-              visualizePathStyle: { stroke: Color.GRAY },
-            });
-          }
-          break;
-        }
-
-        creep.memory.status = "transferring";
-        break;
-
-      case "transferring":
-        const container = getContainer(creep);
-        if (container == null) {
-          console.log("Error miner: container not found", creep.room.name);
-          break;
-        }
-
-        // creep.say("⚡ min: upload");
-        if (creep.transfer(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-          creep.moveTo(container, {
-            visualizePathStyle: { stroke: Color.ORANGE },
-          });
-        }
-
-        if (creep.store.getUsedCapacity() == 0) {
-          creep.memory.status = "harvesting";
-        }
-        break;
+      if (creep.transfer(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+        delete creep.memory.nearbyContainerId;
+        creep.moveTo(container, { visualizePathStyle: { stroke: Color.GRAY } });
+      }
     }
   },
 };
 
-const getSource = (creep: Creep): Source | null => {
+const getNearbyContainer = (creep: Creep): StructureContainer | null => {
+  const container = creep.memory.nearbyContainerId
+    ? Game.getObjectById<StructureContainer>(creep.memory.nearbyContainerId)
+    : creep.pos
+        .findInRange(FIND_STRUCTURES, 1)
+        .find((s) => s.structureType == STRUCTURE_CONTAINER);
+
+  if (container) {
+    creep.memory.nearbyContainerId = container.id;
+    return container;
+  }
+  return null;
+};
+
+const getTargetSource = (creep: Creep): Source | null => {
+  if (creep.memory.targetId) {
+    return Game.getObjectById<Source>(creep.memory.targetId);
+  }
+
   const otherCreeps = creep.room.find(FIND_MY_CREEPS, {
     filter: (cr) =>
       cr.memory.roleId == creep.memory.roleId && cr.id != creep.id,
@@ -90,32 +100,6 @@ const getSource = (creep: Creep): Source | null => {
     prev.count < curr.count ? prev : curr,
   );
 
+  creep.memory.targetId = minCountSource.source.id;
   return minCountSource.source;
-};
-
-const getContainer = (creep: Creep): StructureContainer | null => {
-  let container: StructureContainer | null;
-  // todo: проверить дальность, если она больше 5, то такое не надо
-  container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-    filter: (structure) => {
-      return (
-        structure.structureType == STRUCTURE_CONTAINER &&
-        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-      );
-    },
-  });
-
-  if (container == null) {
-    const containers = creep.room.find<StructureContainer>(FIND_STRUCTURES, {
-      filter: (structure) =>
-        structure.structureType == STRUCTURE_CONTAINER &&
-        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0,
-    });
-    containers.sort(
-      (a, b) => creep.pos.getRangeTo(a) - creep.pos.getRangeTo(b),
-    );
-    container = containers[0];
-  }
-
-  return container;
 };
