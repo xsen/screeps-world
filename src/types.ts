@@ -1,6 +1,7 @@
 declare global {
   interface Memory {
     log: any;
+    roomsSafe: { [roomName: string]: boolean };
     avoidPositions: { [roomName: string]: RoomPosition[] };
   }
 

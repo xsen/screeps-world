@@ -18,10 +18,10 @@ export const loop = () => {
       creeps: room.find(FIND_MY_CREEPS),
     };
 
-    defense.execute(data);
     planner.execute(data);
 
     if (room.controller?.my) {
+      defense.execute(data);
       spawner.execute(data);
     }
   }

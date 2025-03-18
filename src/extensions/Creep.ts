@@ -24,8 +24,8 @@ Creep.prototype.customMoveTo = function (
   target: RoomPosition | { pos: RoomPosition },
   opts?: MoveToOpts,
 ): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND {
-  const avoidPosition = Memory.avoidPositions?.[this.room.name];
-  if (avoidPosition) {
+  const avoidPositions = Memory.avoidPositions?.[this.room.name];
+  if (avoidPositions) {
     opts = opts || {};
 
     const originalCostCallback = opts.costCallback;
@@ -38,9 +38,7 @@ Creep.prototype.customMoveTo = function (
         if (result) costMatrix = result;
       }
 
-      const avoid = Memory.avoidPositions?.[roomName];
-      avoid?.forEach((pos) => costMatrix.set(pos.x, pos.y, 255));
-
+      avoidPositions.forEach((pos) => costMatrix.set(pos.x, pos.y, 255));
       return costMatrix;
     };
   }
