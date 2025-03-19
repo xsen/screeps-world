@@ -1,4 +1,5 @@
 import { Color } from "../../enums.ts";
+import profiler from "screeps-profiler";
 
 export const melee: CreepRoleHandler = {
   id: 1,
@@ -13,3 +14,4 @@ export const melee: CreepRoleHandler = {
     }
   },
 };
+profiler.registerObject(melee, "Creep.Role.Melee");

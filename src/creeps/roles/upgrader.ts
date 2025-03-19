@@ -1,4 +1,4 @@
-import { Color } from "../../enums.ts";
+import profiler from "screeps-profiler";
 
 export const upgrader: CreepRoleHandler = {
   id: 3,
@@ -29,9 +29,12 @@ export const upgrader: CreepRoleHandler = {
       return;
     }
 
-    creep.upgradeController(creep.room.controller);
-    creep.moveTo(creep.room.controller, {
-      visualizePathStyle: { stroke: Color.YELLOW },
-    });
+    const controller = creep.room.controller;
+    const res = creep.upgradeController(controller);
+    if (res == ERR_NOT_IN_RANGE || creep.pos.getRangeTo(controller) > 1) {
+      creep.moveTo(controller);
+    }
   },
 };
+
+profiler.registerObject(upgrader, "Creep.Role.Upgrader");

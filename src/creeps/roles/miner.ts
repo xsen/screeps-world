@@ -1,4 +1,5 @@
 import { Color } from "../../enums.ts";
+import profiler from "screeps-profiler";
 
 export const miner: CreepRoleHandler = {
   id: 5,
@@ -112,3 +113,4 @@ const getTargetSource = (creep: Creep): Source | null => {
   creep.memory.targetId = minCountSource.source.id;
   return minCountSource.source;
 };
+profiler.registerObject(miner, "Creep.Role.Miner");

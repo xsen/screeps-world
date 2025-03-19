@@ -19,7 +19,7 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
           { count: 4, body: CARRY },
         ],
         limit: 1,
-        generation: 2,
+        generation: 10,
       },
       {
         handlerId: carry.id,
@@ -28,13 +28,13 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
           { count: 7, body: MOVE },
         ],
         limit: 1,
-        generation: 10,
+        generation: 11,
       },
       {
         handlerId: miner.id,
         body: [
-          { count: 4, body: WORK },
-          { count: 3, body: CARRY },
+          { count: 3, body: WORK },
+          { count: 1, body: CARRY },
           { count: 1, body: MOVE },
         ],
         limit: 4,
@@ -43,11 +43,11 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
       {
         handlerId: upgrader.id,
         body: [
-          { count: 6, body: WORK },
+          { count: 10, body: WORK },
           { count: 6, body: CARRY },
-          { count: 8, body: MOVE },
+          { count: 4, body: MOVE },
         ],
-        limit: 4,
+        limit: 2,
         generation: 10,
       },
       {
@@ -63,81 +63,81 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
       {
         handlerId: builder.id,
         body: [
-          { count: 4, body: WORK },
-          { count: 4, body: CARRY },
+          { count: 3, body: WORK },
+          { count: 5, body: CARRY },
           { count: 4, body: MOVE },
         ],
+        limit: 0,
         generation: 10,
-        limit: 0,
-      },
-      {
-        handlerId: upgrader.id,
-        body: [
-          { count: 4, body: WORK },
-          { count: 4, body: CARRY },
-          { count: 4, body: MOVE },
-        ],
-        generation: 11,
-        limit: 0,
-        targetRoom: "E2S37",
-      },
-      {
-        handlerId: builder.id,
-        body: [
-          { count: 4, body: WORK },
-          { count: 4, body: CARRY },
-          { count: 4, body: MOVE },
-        ],
-        generation: 11,
-        limit: 0,
-        targetRoom: "E2S37",
       },
       {
         targetRoom: "",
         handlerId: command.id,
         body: [
-          { count: 6, body: CARRY },
-          { count: 6, body: MOVE },
+          { count: 8, body: CARRY },
+          { count: 8, body: MOVE },
         ],
-        limit: 0,
-        generation: 1,
+        limit: 1,
+        generation: 10,
+
         commands: [
           {
-            target: new RoomPosition(43, 20, "E1S37"),
+            target: new RoomPosition(17, 40, "E1S36"),
             handler: withdraw,
           },
           {
-            target: new RoomPosition(28, 24, "E2S37"),
+            target: new RoomPosition(43, 20, "E1S37"),
             handler: transfer,
           },
         ],
       },
       {
-        targetRoom: "",
-        handlerId: command.id,
+        targetRoom: "E1S36",
+        handlerId: miner.id,
+        body: [
+          { count: 5, body: WORK },
+          { count: 1, body: CARRY },
+          { count: 3, body: MOVE },
+        ],
+        limit: 2,
+        generation: 11,
+      },
+      {
+        targetRoom: "E1S36",
+        handlerId: builder.id,
+        body: [
+          { count: 2, body: WORK },
+          { count: 4, body: CARRY },
+          { count: 6, body: MOVE },
+        ],
+        limit: 0,
+        generation: 11,
+      },
+      {
+        targetRoom: "E1S36",
+        handlerId: upgrader.id,
         body: [
           { count: 2, body: WORK },
           { count: 4, body: CARRY },
           { count: 6, body: MOVE },
         ],
         limit: 2,
-        generation: 2,
-        commands: [
-          {
-            target: new RoomPosition(15, 38, "E1S36"),
-            handler: harvest,
-          },
-          {
-            target: new RoomPosition(43, 20, "E1S37"),
-            handler: transfer,
-          },
-        ],
+        generation: 11,
       },
     ],
   ],
   [
     "E2S37",
     [
+      {
+        handlerId: carry.id,
+        body: [
+          { count: 4, body: CARRY },
+          { count: 2, body: MOVE },
+        ],
+        generation: 20,
+        limit: 1,
+      },
       {
         handlerId: miner.id,
         body: [
@@ -146,16 +146,7 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
           { count: 1, body: MOVE },
         ],
         generation: 20,
-        limit: 3,
-      },
-      {
-        handlerId: carry.id,
-        body: [
-          { count: 4, body: CARRY },
-          { count: 2, body: MOVE },
-        ],
-        generation: 19,
-        limit: 1,
+        limit: 2,
       },
       {
         handlerId: carry.id,
@@ -163,7 +154,7 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
           { count: 8, body: CARRY },
           { count: 4, body: MOVE },
         ],
-        generation: 20,
+        generation: 21,
         limit: 1,
       },
       {
@@ -174,7 +165,7 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
           { count: 2, body: MOVE },
         ],
         generation: 20,
-        limit: 2,
+        limit: 3,
       },
       {
         handlerId: builder.id,
@@ -205,17 +196,61 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
           { count: 6, body: MOVE },
         ],
         limit: 2,
-        generation: 3,
+        generation: 20,
         commands: [
           {
             target: new RoomPosition(15, 24, "E2S36"),
             handler: harvest,
           },
           {
-            target: new RoomPosition(28, 24, "E2S37"),
+            target: new RoomPosition(31, 16, "E2S37"),
             handler: transfer,
           },
         ],
+      },
+    ],
+  ],
+  [
+    "E1S36",
+    [
+      {
+        handlerId: carry.id,
+        body: [
+          { count: 3, body: CARRY },
+          { count: 3, body: MOVE },
+        ],
+        generation: 30,
+        limit: 1,
+      },
+      {
+        handlerId: repair.id,
+        body: [
+          { count: 1, body: WORK },
+          { count: 3, body: CARRY },
+          { count: 4, body: MOVE },
+        ],
+        generation: 30,
+        limit: 1,
+      },
+      {
+        handlerId: builder.id,
+        body: [
+          { count: 1, body: WORK },
+          { count: 3, body: CARRY },
+          { count: 4, body: MOVE },
+        ],
+        generation: 30,
+        limit: 0,
+      },
+      {
+        handlerId: upgrader.id,
+        body: [
+          { count: 4, body: WORK },
+          { count: 2, body: CARRY },
+          { count: 4, body: MOVE },
+        ],
+        generation: 30,
+        limit: 4,
       },
     ],
   ],

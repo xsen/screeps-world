@@ -1,5 +1,6 @@
 import { Color } from "../../enums.ts";
 import { repairStructures } from "./repair.ts";
+import profiler from "screeps-profiler";
 
 export const builder: CreepRoleHandler = {
   id: 2,
@@ -40,3 +41,5 @@ export const builder: CreepRoleHandler = {
     repairStructures(creep);
   },
 };
+
+profiler.registerObject(builder, "Creep.Role.builder");

@@ -1,4 +1,5 @@
 import { Color } from "../../enums.ts";
+import profiler from "screeps-profiler";
 
 export const carry: CreepRoleHandler = {
   id: 6,
@@ -144,3 +145,5 @@ const getFreeStructures = (
     },
   });
 };
+
+profiler.registerObject(carry, "Creep.Role.Carry");

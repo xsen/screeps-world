@@ -1,4 +1,5 @@
 import { commands } from "../commands.ts";
+import profiler from "screeps-profiler";
 
 export const command: CreepRoleHandler = {
   id: 8,
@@ -36,3 +37,5 @@ export const command: CreepRoleHandler = {
     }
   },
 };
+
+profiler.registerObject(command, "Creep.Role.Command");

@@ -1,4 +1,5 @@
 import { Color } from "../../enums.ts";
+import profiler from "screeps-profiler";
 
 export const repair: CreepRoleHandler = {
   id: 4,
@@ -22,6 +23,8 @@ export const repair: CreepRoleHandler = {
     }
   },
 };
+
+profiler.registerObject(repair, "Creep.Role.Repair");
 
 export const repairStructures = (creep: Creep) => {
   const target = creep.memory.targetId
@@ -62,7 +65,7 @@ const getRepairTarget = (creep: Creep) => {
 const repairDefense = (creep: Creep) => {
   //@todo: hotfix
   [
-    10000, 30000, 50000, 100000, 300000, 500000, 700000, 1000000, 1500000,
+    5000, 10000, 30000, 50000, 100000, 300000, 500000, 700000, 1000000, 1500000,
     2000000, 3000000, 4000000, 5000000, 6000000, 7000000, 10000000, 15000000,
   ].some((h) => {
     const target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
