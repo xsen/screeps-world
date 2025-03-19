@@ -4,35 +4,39 @@ import { defense } from "./modules/defense.ts";
 import { spawner } from "./modules/spawner.ts";
 import { planner } from "./modules/planner.ts";
 import { flags } from "./modules/flags.ts";
+import profiler from "screeps-profiler";
+
+profiler.enable();
 
 export const loop = () => {
-  spawner.create();
-  defense.create();
-  planner.create();
+  profiler.wrap(() => {
+    spawner.create();
+    defense.create();
+    planner.create();
 
-  for (const roomName in Game.rooms) {
-    const room = Game.rooms[roomName];
+    for (const roomName in Game.rooms) {
+      const room = Game.rooms[roomName];
 
-    const data = {
-      room: room,
-      creeps: room.find(FIND_MY_CREEPS),
-    };
+      const data = {
+        room: room,
+        creeps: room.find(FIND_MY_CREEPS),
+      };
 
-    planner.execute(data);
-
-    if (room.controller?.my) {
-      defense.execute(data);
-      spawner.execute(data);
+      planner.execute(data);
+      if (room.controller?.my) {
+        defense.execute(data);
+        spawner.execute(data);
+      }
     }
-  }
 
-  if (Game.time % 99 === 0) {
-    flags.create().execute();
-  }
+    if (Game.time % 99 === 0) {
+      flags.create().execute();
+    }
 
-  if (Game.time % 10 === 0) {
-    updateStats();
-  }
+    if (Game.time % 10 === 0) {
+      updateStats();
+    }
+  });
 };
 
 function updateStats() {

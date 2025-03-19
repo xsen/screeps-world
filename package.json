@@ -11,13 +11,13 @@
     "@types/lodash": "^4.17.16",
     "@types/node": "^22.13.9",
     "@types/screeps": "^3.2.3",
+    "@types/screeps-profiler": "^1.2.6",
     "axios": "^1.8.1",
     "dotenv": "^16.4.7",
     "prettier": "3.5.3",
+    "screeps-profiler": "^2.0.1",
+    "source-map": "^0.6.1",
     "typescript": "~5.7.2",
     "vite": "^6.2.0"
-  },
-  "dependencies": {
-    "source-map": "^0.6.1"
   }
 }
