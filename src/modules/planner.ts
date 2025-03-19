@@ -1,12 +1,15 @@
 import { Color } from "../enums.ts";
 import { roles } from "../creeps/roles.ts";
 
-export const planner: RoomModule = {
+export const planner: GlobalModule = {
   create: function () {
     return this;
   },
-  execute: function (data: RoomModuleData) {
-    data.creeps.forEach((creep) => {
+  execute: function () {
+    const creeps = Game.creeps;
+    for (const creepName in creeps) {
+      const creep = creeps[creepName];
+
       if (creep.memory.room && creep.room.name != creep.memory.room) {
         creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {
           visualizePathStyle: { stroke: Color.GREEN },
@@ -21,6 +24,6 @@ export const planner: RoomModule = {
       }
 
       handler.run(creep);
-    });
+    }
   },
 };

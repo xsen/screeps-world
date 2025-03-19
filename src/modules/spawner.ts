@@ -13,16 +13,16 @@ export const spawner: RoomModule = {
 
     return this;
   },
-  execute: function (data: RoomModuleData) {
-    const spawner = data.room.find(FIND_MY_SPAWNS)[0];
+  execute: function (room) {
+    const spawner = room.find(FIND_MY_SPAWNS)[0];
     if (!spawner || spawner.spawning != null) {
       return;
     }
 
-    let roomSpawnPlans: RoomSpawnPlan[] = spawnPlans.get(data.room.name) || [];
+    let roomSpawnPlans: RoomSpawnPlan[] = spawnPlans.get(room.name) || [];
     if (!roomSpawnPlans || roomSpawnPlans.length == 0) return;
 
-    roomSpawnPlans = dynamicSpawnCreepPlan(data.room, roomSpawnPlans);
+    roomSpawnPlans = dynamicSpawnCreepPlan(room, roomSpawnPlans);
     for (const spawnPlan of roomSpawnPlans) {
       const handler = roles.get(spawnPlan.handlerId);
       if (handler == null) {
@@ -31,7 +31,7 @@ export const spawner: RoomModule = {
       }
 
       const spawnRoomName =
-        spawnPlan.targetRoom != null ? spawnPlan.targetRoom : data.room.name;
+        spawnPlan.targetRoom != null ? spawnPlan.targetRoom : room.name;
 
       const count = Object.values(Game.creeps).filter(
         (cr) =>
@@ -61,7 +61,7 @@ export const spawner: RoomModule = {
 
         if (res == OK) {
           console.log(
-            `Spawning ${handler.name}-${spawnPlan.generation} in ${data.room.name} for target room "${spawnRoomName}"`,
+            `Spawning ${handler.name}-${spawnPlan.generation} in ${room.name} for target room "${spawnRoomName}"`,
           );
         }
         return;

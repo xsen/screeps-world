@@ -8,25 +8,20 @@ import profiler from "screeps-profiler";
 
 profiler.enable();
 
-export const loop = () => {
+export const loop = () =>
   profiler.wrap(() => {
     spawner.create();
     defense.create();
-    planner.create();
 
-    for (const roomName in Game.rooms) {
-      const room = Game.rooms[roomName];
+    planner.create().execute();
 
-      const data = {
-        room: room,
-        creeps: room.find(FIND_MY_CREEPS),
-      };
+    const rooms = Game.rooms;
+    for (const roomName in rooms) {
+      const room = rooms[roomName];
+      if (room.controller?.my == false) continue;
 
-      planner.execute(data);
-      if (room.controller?.my) {
-        defense.execute(data);
-        spawner.execute(data);
-      }
+      defense.execute(room);
+      spawner.execute(room);
     }
 
     if (Game.time % 99 === 0) {
@@ -37,7 +32,6 @@ export const loop = () => {
       updateStats();
     }
   });
-};
 
 function updateStats() {
   const stats: GameStats = {

@@ -1,7 +1,6 @@
 declare global {
   interface Memory {
     log: any;
-    roomsSafe: { [roomName: string]: boolean };
     avoidPositions: { [roomName: string]: RoomPosition[] };
   }
 
@@ -36,11 +35,13 @@ declare global {
     cpu: CPUStats;
   }
 
-  interface Stats {
-    gcl: any;
-    cpu: any;
-    rooms: any;
-    time: number;
+  interface Room {
+    memory: RoomMemory;
+  }
+
+  interface RoomMemory {
+    isSafe: boolean;
+    avoidPositions: RoomPosition[];
   }
 
   interface Creep {
@@ -101,7 +102,7 @@ declare global {
 
   interface RoomModule {
     create: () => RoomModule;
-    execute: (data: RoomModuleData) => void;
+    execute: (room: Room) => void;
   }
 
   interface RoomModuleData {

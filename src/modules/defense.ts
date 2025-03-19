@@ -4,50 +4,46 @@ export const defense: RoomModule = {
   create: function () {
     return this;
   },
-  execute: (data: RoomModuleData) => {
+  execute: (room) => {
     let hostiles: Creep[] = [];
 
-    if (Memory.roomsSafe == undefined) {
-      Memory.roomsSafe = {};
-    }
-
     if (Game.time % 3 == 0) {
-      hostiles = data.room.find(FIND_HOSTILE_CREEPS);
-      Memory.roomsSafe[data.room.name] = hostiles.length == 0;
+      hostiles = room.find(FIND_HOSTILE_CREEPS);
+      room.memory.isSafe = hostiles.length == 0;
     }
 
-    if (Memory.roomsSafe[data.room.name]) {
+    if (room.memory.isSafe) {
       return;
     }
 
     if (hostiles.length == 0) {
-      hostiles = data.room.find(FIND_HOSTILE_CREEPS);
+      hostiles = room.find(FIND_HOSTILE_CREEPS);
       if (hostiles.length == 0) {
-        Memory.roomsSafe[data.room.name] = true;
+        room.memory.isSafe = true;
         return;
       }
     }
 
-    const center = new RoomPosition(25, 25, data.room.name);
+    const center = new RoomPosition(25, 25, room.name);
     hostiles.sort(
       (a, b) => a.pos.getRangeTo(center) - b.pos.getRangeTo(center),
     );
 
-    const towers = data.room.find(FIND_MY_STRUCTURES, {
+    const towers = room.find(FIND_MY_STRUCTURES, {
       filter: (s) => s.structureType === STRUCTURE_TOWER,
     });
     towers.forEach((tower) => tower.attack(hostiles[0]));
 
     if (towers.length == 0) {
-      const body = generateCreepBody(data.room.energyCapacityAvailable);
-      const spawn = data.room.find(FIND_MY_SPAWNS)[0];
+      const body = generateCreepBody(room.energyCapacityAvailable);
+      const spawn = room.find(FIND_MY_SPAWNS)[0];
 
       if (spawn) {
         spawn.spawnCreep(body, `defense_${Game.time} `, {
           memory: {
             roleId: melee.id,
             generation: 99,
-            room: data.room.name,
+            room: room.name,
             status: "spawned",
           },
         });
