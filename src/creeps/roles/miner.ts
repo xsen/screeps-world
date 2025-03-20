@@ -41,14 +41,12 @@ export const miner: CreepRoleHandler = {
     }
 
     if (creep.getStatus() == "transferring") {
-      const container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-        filter: (structure) => {
-          return (
-            structure.structureType == STRUCTURE_CONTAINER &&
-            structure.store.getFreeCapacity(RESOURCE_ENERGY) >
-              creep.store.getUsedCapacity(RESOURCE_ENERGY)
-          );
-        },
+      const container = creep.pos.findInRange(FIND_STRUCTURES, 5).find((s) => {
+        return (
+          s.structureType === STRUCTURE_CONTAINER &&
+          s.store.getFreeCapacity(RESOURCE_ENERGY) >
+            creep.store.getUsedCapacity(RESOURCE_ENERGY)
+        );
       });
 
       if (container == null) {

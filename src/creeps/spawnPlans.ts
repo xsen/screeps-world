@@ -33,21 +33,21 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
       {
         handlerId: miner.id,
         body: [
-          { count: 3, body: WORK },
+          { count: 5, body: WORK },
           { count: 1, body: CARRY },
           { count: 1, body: MOVE },
         ],
-        limit: 4,
+        limit: 2,
         generation: 10,
       },
       {
         handlerId: upgrader.id,
         body: [
-          { count: 10, body: WORK },
-          { count: 6, body: CARRY },
+          { count: 8, body: WORK },
+          { count: 8, body: CARRY },
           { count: 4, body: MOVE },
         ],
-        limit: 2,
+        limit: 3,
         generation: 10,
       },
       {
@@ -69,60 +69,6 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
         ],
         limit: 0,
         generation: 10,
-      },
-      {
-        targetRoom: "",
-        handlerId: command.id,
-        body: [
-          { count: 8, body: CARRY },
-          { count: 8, body: MOVE },
-        ],
-        limit: 1,
-        generation: 10,
-
-        commands: [
-          {
-            target: new RoomPosition(17, 40, "E1S36"),
-            handler: withdraw,
-          },
-          {
-            target: new RoomPosition(43, 20, "E1S37"),
-            handler: transfer,
-          },
-        ],
-      },
-      {
-        targetRoom: "E1S36",
-        handlerId: miner.id,
-        body: [
-          { count: 5, body: WORK },
-          { count: 1, body: CARRY },
-          { count: 3, body: MOVE },
-        ],
-        limit: 2,
-        generation: 11,
-      },
-      {
-        targetRoom: "E1S36",
-        handlerId: builder.id,
-        body: [
-          { count: 2, body: WORK },
-          { count: 4, body: CARRY },
-          { count: 6, body: MOVE },
-        ],
-        limit: 0,
-        generation: 11,
-      },
-      {
-        targetRoom: "E1S36",
-        handlerId: upgrader.id,
-        body: [
-          { count: 2, body: WORK },
-          { count: 4, body: CARRY },
-          { count: 6, body: MOVE },
-        ],
-        limit: 2,
-        generation: 11,
       },
     ],
   ],
@@ -161,11 +107,11 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
         handlerId: upgrader.id,
         body: [
           { count: 4, body: WORK },
-          { count: 4, body: CARRY },
+          { count: 8, body: CARRY },
           { count: 2, body: MOVE },
         ],
         generation: 20,
-        limit: 3,
+        limit: 2,
       },
       {
         handlerId: builder.id,
@@ -191,9 +137,9 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
         targetRoom: "",
         handlerId: command.id,
         body: [
-          { count: 2, body: WORK },
-          { count: 4, body: CARRY },
-          { count: 6, body: MOVE },
+          { count: 3, body: WORK },
+          { count: 6, body: CARRY },
+          { count: 9, body: MOVE },
         ],
         limit: 2,
         generation: 20,
@@ -216,18 +162,37 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
       {
         handlerId: carry.id,
         body: [
-          { count: 3, body: CARRY },
-          { count: 3, body: MOVE },
+          { count: 4, body: CARRY },
+          { count: 2, body: MOVE },
         ],
         generation: 30,
-        limit: 1,
+        limit: 0,
+      },
+      {
+        handlerId: carry.id,
+        body: [
+          { count: 10, body: CARRY },
+          { count: 5, body: MOVE },
+        ],
+        generation: 31,
+        limit: 3,
+      },
+      {
+        handlerId: miner.id,
+        body: [
+          { count: 5, body: WORK },
+          { count: 1, body: CARRY },
+          { count: 1, body: MOVE },
+        ],
+        generation: 30,
+        limit: 2,
       },
       {
         handlerId: repair.id,
         body: [
-          { count: 1, body: WORK },
-          { count: 3, body: CARRY },
-          { count: 4, body: MOVE },
+          { count: 2, body: WORK },
+          { count: 4, body: CARRY },
+          { count: 6, body: MOVE },
         ],
         generation: 30,
         limit: 1,
@@ -235,19 +200,19 @@ export const spawnPlans = new Map<string, RoomSpawnPlan[]>([
       {
         handlerId: builder.id,
         body: [
-          { count: 1, body: WORK },
-          { count: 3, body: CARRY },
-          { count: 4, body: MOVE },
+          { count: 2, body: WORK },
+          { count: 4, body: CARRY },
+          { count: 6, body: MOVE },
         ],
         generation: 30,
-        limit: 0,
+        limit: 1,
       },
       {
         handlerId: upgrader.id,
         body: [
           { count: 4, body: WORK },
-          { count: 2, body: CARRY },
-          { count: 4, body: MOVE },
+          { count: 6, body: CARRY },
+          { count: 5, body: MOVE },
         ],
         generation: 30,
         limit: 4,
