@@ -72,12 +72,24 @@ declare global {
   interface CreepMemory {
     room: string;
     status: string;
+    role?: string; //@todo
     roleId: number;
     generation: number;
     targetId?: Id<AnyStructure | Source>;
     commands?: CreepCommand[];
     commandId?: number;
     nearbyContainerId?: Id<StructureContainer>;
+  }
+
+  interface CreepRoleDesign {
+    handler: CreepRoleHandler;
+    baseBody: BodyPartConstant[];
+    scaling: BodyPartConstant[];
+    minCount: number;
+    maxCount: number | ((room: Room) => number);
+    priority: number;
+    maxCost: number;
+    energyReserve?: number;
   }
 
   interface RoomSpawnPlan {
@@ -113,7 +125,6 @@ declare global {
   interface CreepRoleHandler {
     id: number;
     name: string;
-    stage?: string;
     run: (creep: Creep) => void;
   }
 

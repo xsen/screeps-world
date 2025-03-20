@@ -1,19 +1,21 @@
 import "./extensions/Creep.ts";
 
 import { defense } from "./modules/defense.ts";
-import { spawner } from "./modules/spawner.ts";
-import { planner } from "./modules/planner.ts";
+import { executor } from "./modules/executor.ts";
 import { flags } from "./modules/flags.ts";
+import { spawner } from "./modules/spawner.ts";
+import { spawnerV2 } from "./modules/spawnerV2.ts";
 import profiler from "screeps-profiler";
 
 profiler.enable();
 
 export const loop = () =>
   profiler.wrap(() => {
-    spawner.create();
     defense.create();
+    spawner.create();
+    spawnerV2.create();
 
-    planner.create().execute();
+    executor.create().execute();
 
     const rooms = Game.rooms;
     for (const roomName in rooms) {
@@ -21,7 +23,11 @@ export const loop = () =>
       if (room.controller?.my == false) continue;
 
       defense.execute(room);
-      spawner.execute(room);
+      if (room.name == "sim") {
+        spawnerV2.execute(room);
+      } else {
+        spawner.execute(room);
+      }
     }
 
     if (Game.time % 99 === 0) {

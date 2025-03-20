@@ -1,7 +1,7 @@
 import { Color } from "../enums.ts";
 import { roles } from "../creeps/roles.ts";
 
-export const planner: GlobalModule = {
+export const executor: GlobalModule = {
   create: function () {
     return this;
   },
