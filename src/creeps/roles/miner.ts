@@ -1,5 +1,6 @@
 import { Color } from "../../enums.ts";
 import profiler from "screeps-profiler";
+import { utils } from "../../utils.ts";
 
 export const miner: CreepRoleHandler = {
   id: 5,
@@ -16,7 +17,7 @@ export const miner: CreepRoleHandler = {
       const source = getTargetSource(creep);
 
       if (source == null) {
-        console.log("Error miner: source not found", creep.memory.targetId);
+        utils.log("Error miner: source not found", creep.memory.targetId);
         return;
       }
 
@@ -50,7 +51,8 @@ export const miner: CreepRoleHandler = {
       });
 
       if (container == null) {
-        console.log("Error miner: container not found");
+        utils.log("Error miner: container not found");
+        creep.drop(RESOURCE_ENERGY);
         return;
       }
 

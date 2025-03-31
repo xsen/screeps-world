@@ -1,4 +1,3 @@
-import { Color } from "../../enums.ts";
 import profiler from "screeps-profiler";
 
 export const melee: CreepRoleHandler = {
@@ -6,10 +5,12 @@ export const melee: CreepRoleHandler = {
   name: "melee",
 
   run: function (creep: Creep) {
-    const target = creep.pos.findClosestByPath(FIND_HOSTILE_CREEPS);
+    const target =
+      creep.pos.findClosestByPath(FIND_HOSTILE_CREEPS) ||
+      creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES);
     if (target) {
       if (creep.attack(target) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(target, { visualizePathStyle: { stroke: Color.RED } });
+        creep.moveTo(target);
       }
     }
   },

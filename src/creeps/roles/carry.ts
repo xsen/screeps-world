@@ -1,5 +1,6 @@
 import { Color } from "../../enums.ts";
 import profiler from "screeps-profiler";
+import { utils } from "../../utils.ts";
 
 export const carry: CreepRoleHandler = {
   id: 6,
@@ -62,7 +63,7 @@ const refillEnergy = (creep: Creep): void => {
   }
 
   if (!target) {
-    console.log("Error: container for refill not found");
+    utils.log("Error: container for refill not found");
     return;
   }
 

@@ -1,10 +1,15 @@
 declare global {
   interface Memory {
-    log: any;
+    logs: MemoryLogs;
     avoidPositions: { [roomName: string]: RoomPosition[] };
   }
 
-  interface RoomStats {
+  interface MemoryLogs {
+    lastError?: any;
+    data?: any;
+  }
+
+  interface GlobalRoomStats {
     energy: number;
     minerals: { [type: string]: number };
     controllerProgress?: number;
@@ -31,7 +36,7 @@ declare global {
 
   interface GameStats {
     gcl: GCLStats;
-    rooms: { [roomName: string]: RoomStats };
+    rooms: { [roomName: string]: GlobalRoomStats };
     cpu: CPUStats;
   }
 
@@ -41,7 +46,14 @@ declare global {
 
   interface RoomMemory {
     isSafe: boolean;
+    stats: LocalRoomStats;
+    targets: { [targetId: string]: RoomPosition };
     avoidPositions: RoomPosition[];
+  }
+
+  interface LocalRoomStats {
+    sourcesCount: number;
+    constructionSitesCount: number;
   }
 
   interface Creep {
@@ -81,18 +93,18 @@ declare global {
     nearbyContainerId?: Id<StructureContainer>;
   }
 
-  interface CreepRoleDesign {
+  interface AutoSpawnPlan {
     handler: CreepRoleHandler;
     baseBody: BodyPartConstant[];
     scaling: BodyPartConstant[];
-    minCount: number;
+    minCount: number | ((room: Room) => number);
     maxCount: number | ((room: Room) => number);
     priority: number;
     maxCost: number;
     energyReserve?: number;
   }
 
-  interface RoomSpawnPlan {
+  interface ManualSpawnPlan {
     handlerId: number;
     body: SpawnCreepBody[];
     generation: number;

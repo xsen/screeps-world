@@ -1,4 +1,3 @@
-import { Color } from "../enums.ts";
 import { roles } from "../creeps/roles.ts";
 
 export const executor: GlobalModule = {
@@ -11,9 +10,7 @@ export const executor: GlobalModule = {
       const creep = creeps[creepName];
 
       if (creep.memory.room && creep.room.name != creep.memory.room) {
-        creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {
-          visualizePathStyle: { stroke: Color.GREEN },
-        });
+        creep.moveTo(new RoomPosition(25, 25, creep.memory.room));
         return;
       }
 
