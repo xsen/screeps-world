@@ -1,4 +1,3 @@
-import { Color } from "../../enums.ts";
 import profiler from "screeps-profiler";
 
 export const repair: CreepRoleHandler = {
@@ -42,7 +41,7 @@ export const repairStructures = (creep: Creep) => {
 
 const repairStructure = (creep: Creep, target: Structure) => {
   if (creep.repair(target) == ERR_NOT_IN_RANGE) {
-    creep.moveTo(target, { visualizePathStyle: { stroke: Color.BLUE } });
+    creep.customMoveTo(target);
   }
 };
 

@@ -1,12 +1,8 @@
-import { Color } from "../../enums.ts";
-
 export const withdraw: CreepCommandHandler = {
   id: "withdraw",
   run: function (creep, position) {
     if (creep.room.name != position.roomName) {
-      creep.moveTo(position, {
-        visualizePathStyle: { stroke: Color.GRAY },
-      });
+      creep.customMoveTo(position);
       return false;
     }
 
@@ -26,9 +22,7 @@ export const withdraw: CreepCommandHandler = {
 
     const res = creep.withdraw(target, RESOURCE_ENERGY);
     if (res == ERR_NOT_IN_RANGE) {
-      creep.moveTo(target, {
-        visualizePathStyle: { stroke: Color.GRAY },
-      });
+      creep.customMoveTo(target);
     }
     return res == OK;
   },

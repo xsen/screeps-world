@@ -32,7 +32,7 @@ export const upgrader: CreepRoleHandler = {
     const controller = creep.room.controller;
     const res = creep.upgradeController(controller);
     if (res == ERR_NOT_IN_RANGE || creep.pos.getRangeTo(controller) > 1) {
-      creep.moveTo(controller);
+      creep.customMoveTo(controller);
     }
   },
 };

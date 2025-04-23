@@ -34,7 +34,7 @@ export const defense: RoomModule = {
     });
     towers.forEach((tower) => tower.attack(hostiles[0]));
 
-    if (towers.length == 0) {
+    if (towers.length == 0 && room.name != "sim") {
       const body = generateCreepBody(room.energyCapacityAvailable);
       const spawn = room.find(FIND_MY_SPAWNS)[0];
 

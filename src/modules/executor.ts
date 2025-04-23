@@ -6,9 +6,8 @@ export const executor: GlobalModule = {
   },
   execute: function () {
     const creeps = Game.creeps;
-    for (const creepName in creeps) {
+    for (const creepName in Game.creeps) {
       const creep = creeps[creepName];
-
       if (creep.memory.room && creep.room.name != creep.memory.room) {
         creep.moveTo(new RoomPosition(25, 25, creep.memory.room));
         return;

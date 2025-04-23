@@ -2,7 +2,7 @@ export const dismantle: CreepCommandHandler = {
   id: "dismantle",
   run: function (creep, position) {
     if (creep.room.name != position.roomName) {
-      creep.moveTo(position);
+      creep.customMoveTo(position);
       return false;
     }
 
@@ -10,7 +10,7 @@ export const dismantle: CreepCommandHandler = {
     if (target) {
       const res = creep.dismantle(target);
       if (res == ERR_NOT_IN_RANGE) {
-        creep.moveTo(position);
+        creep.customMoveTo(position);
       }
       return false;
     }

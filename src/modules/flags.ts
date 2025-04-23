@@ -4,17 +4,19 @@ export const flags: GlobalModule = {
   },
 
   execute: function () {
-    Memory.avoidPositions = {};
+    if (Game.time % 99 === 0) {
+      Memory.avoidPositions = {};
 
-    const flags = Game.flags;
-    for (const flagName in flags) {
-      const flag = flags[flagName];
-      if (flag.color == COLOR_BROWN && flag.room?.name) {
-        if (!Memory.avoidPositions[flag.room.name]) {
-          Memory.avoidPositions[flag.room.name] = [];
+      const flags = Game.flags;
+      for (const flagName in flags) {
+        const flag = flags[flagName];
+        if (flag.color == COLOR_BROWN && flag.room?.name) {
+          if (!Memory.avoidPositions[flag.room.name]) {
+            Memory.avoidPositions[flag.room.name] = [];
+          }
+
+          Memory.avoidPositions[flag.room.name].push(flag.pos);
         }
-
-        Memory.avoidPositions[flag.room.name].push(flag.pos);
       }
     }
   },

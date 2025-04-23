@@ -1,4 +1,3 @@
-import { Color } from "../../enums.ts";
 import profiler from "screeps-profiler";
 import { utils } from "../../utils.ts";
 
@@ -24,9 +23,7 @@ export const miner: CreepRoleHandler = {
       const harvestRes = creep.harvest(source);
       if (harvestRes == ERR_NOT_IN_RANGE) {
         delete creep.memory.nearbyContainerId;
-        creep.customMoveTo(source, {
-          visualizePathStyle: { stroke: Color.GRAY },
-        });
+        creep.customMoveTo(source);
       }
 
       if (
@@ -58,9 +55,7 @@ export const miner: CreepRoleHandler = {
 
       if (creep.transfer(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
         delete creep.memory.nearbyContainerId;
-        creep.customMoveTo(container, {
-          visualizePathStyle: { stroke: Color.GRAY },
-        });
+        creep.customMoveTo(container);
       }
     }
   },

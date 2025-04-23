@@ -129,6 +129,13 @@ declare global {
     execute: (room: Room) => void;
   }
 
+  interface StatsModule {
+    statistics?: GameStats;
+    start: () => void;
+    execute: (room: Room) => void;
+    finish: () => void;
+  }
+
   interface RoomModuleData {
     room: Room;
     creeps: Creep[];

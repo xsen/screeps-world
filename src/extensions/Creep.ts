@@ -1,5 +1,3 @@
-import { Color } from "../enums.ts";
-
 Creep.prototype.getCreepTarget = function <T extends AnyStructure | Source>() {
   return this.memory.targetId
     ? (Game.getObjectById(this.memory.targetId) as T)
@@ -48,6 +46,17 @@ Creep.prototype.customMoveTo = function (
 
 // @todo: refactor
 Creep.prototype.getEnergy = function () {
+  if (this.room.controller?.my && this.room.memory.isSafe) {
+    const pickup = this.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
+      filter: (r) => r.resourceType == RESOURCE_ENERGY,
+    });
+    if (pickup) {
+      if (this.pickup(pickup) == ERR_NOT_IN_RANGE) {
+        this.moveTo(pickup);
+      }
+      return;
+    }
+  }
   const containers = this.room
     .find(FIND_STRUCTURES, {
       filter: (structure) => {
@@ -68,14 +77,12 @@ Creep.prototype.getEnergy = function () {
   const target = containers.length > 0 ? containers[0] : this.room.storage;
   if (target) {
     if (this.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-      this.moveTo(target, { visualizePathStyle: { stroke: Color.GRAY } });
+      this.moveTo(target);
     }
   } else {
     const source = this.pos.findClosestByPath(FIND_SOURCES);
     if (source && this.harvest(source) == ERR_NOT_IN_RANGE) {
-      this.moveTo(source, {
-        visualizePathStyle: { stroke: Color.GRAY },
-      });
+      this.moveTo(source);
     }
   }
 };

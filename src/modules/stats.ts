@@ -1,12 +1,29 @@
-export const stats: RoomModule = {
-  create: function () {
-    if (Game.time % 10 === 0) {
+export const stats: StatsModule = {
+  start: function () {
+    if (Game.time % 35 === 0) {
       for (const name in Memory.creeps) {
         if (!(name in Game.creeps)) {
           delete Memory.creeps[name];
         }
       }
+    }
+  },
+  execute: (room) => {
+    if (!room.memory.stats) {
+      room.memory.stats = {
+        sourcesCount: room.find(FIND_SOURCES).length,
+        constructionSitesCount: room.find(FIND_CONSTRUCTION_SITES).length,
+      };
+    }
 
+    if (Game.time % 12 === 0) {
+      room.memory.stats.constructionSitesCount = room.find(
+        FIND_CONSTRUCTION_SITES,
+      ).length;
+    }
+  },
+  finish: function () {
+    if (Game.time % 11 === 0) {
       const stats: GameStats = {
         gcl: {
           progress: Game.gcl.progress,
@@ -44,18 +61,5 @@ export const stats: RoomModule = {
       RawMemory.setActiveSegments([0]);
       RawMemory.segments[0] = JSON.stringify(stats);
     }
-    return this;
-  },
-  execute: (room) => {
-    const stats = room.memory.stats || {
-      sourcesCount: room.find(FIND_SOURCES).length,
-      constructionSitesCount: room.find(FIND_CONSTRUCTION_SITES).length,
-    };
-
-    if (Game.time % 19 === 0) {
-      stats.constructionSitesCount = room.find(FIND_CONSTRUCTION_SITES).length;
-    }
-
-    room.memory.stats = stats;
   },
 };

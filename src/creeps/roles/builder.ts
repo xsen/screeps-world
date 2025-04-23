@@ -1,4 +1,3 @@
-import { Color } from "../../enums.ts";
 import { repairStructures } from "./repair.ts";
 import profiler from "screeps-profiler";
 
@@ -30,9 +29,7 @@ export const builder: CreepRoleHandler = {
     const target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
     if (target != null) {
       if (creep.build(target) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(target, {
-          visualizePathStyle: { stroke: Color.PURPLE },
-        });
+        creep.customMoveTo(target);
       }
 
       return;

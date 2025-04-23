@@ -1,4 +1,3 @@
-import { Color } from "../../enums.ts";
 import profiler from "screeps-profiler";
 import { utils } from "../../utils.ts";
 
@@ -69,7 +68,7 @@ const refillEnergy = (creep: Creep): void => {
 
   creep.setCreepTarget(target);
   if (creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-    creep.customMoveTo(target, { visualizePathStyle: { stroke: Color.GRAY } });
+    creep.customMoveTo(target);
   }
 };
 
@@ -96,9 +95,7 @@ function deliverEnergy(creep: Creep) {
 
   creep.setCreepTarget(target);
   if (creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-    creep.customMoveTo(target, {
-      visualizePathStyle: { stroke: Color.ORANGE },
-    });
+    creep.customMoveTo(target);
   }
 }
 
@@ -120,9 +117,7 @@ function carryEnergy(creep: Creep) {
   }
 
   if (creep.transfer(storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-    creep.customMoveTo(storage, {
-      visualizePathStyle: { stroke: Color.ORANGE },
-    });
+    creep.customMoveTo(storage);
   }
 }
 

@@ -1,12 +1,8 @@
-import { Color } from "../../enums.ts";
-
 export const claim: CreepCommandHandler = {
   id: "claim",
   run: function (creep, position) {
     if (creep.room.name != position.roomName) {
-      creep.moveTo(position, {
-        visualizePathStyle: { stroke: Color.GRAY },
-      });
+      creep.customMoveTo(position);
       return false;
     }
 
@@ -19,7 +15,8 @@ export const claim: CreepCommandHandler = {
 
     creep.claimController(controller);
     creep.attackController(controller);
-    creep.moveTo(controller);
+    // creep.signController(controller, "");
+    creep.customMoveTo(controller);
 
     return creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0;
   },

@@ -11,7 +11,8 @@ profiler.enable();
 
 export const loop = () =>
   profiler.wrap(() => {
-    stats.create();
+    stats.start();
+
     defense.create();
     spawner.create();
 
@@ -27,7 +28,6 @@ export const loop = () =>
       spawner.execute(room);
     }
 
-    if (Game.time % 99 === 0) {
-      flags.create().execute();
-    }
+    flags.create().execute();
+    stats.finish();
   });
