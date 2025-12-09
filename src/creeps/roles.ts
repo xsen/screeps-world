@@ -1,17 +1,17 @@
-import { melee } from "./roles/melee.ts";
-import { builder } from "./roles/builder.ts";
-import { upgrader } from "./roles/upgrader.ts";
-import { repair } from "./roles/repair.ts";
-import { miner } from "./roles/miner.ts";
-import { carry } from "./roles/carry.ts";
-import { command } from "./roles/command.ts";
+import { melee } from "./roles/MeleeRole.ts";
+import { builder } from "./roles/BuilderRole.ts";
+import { upgrader } from "./roles/UpgraderRole.ts";
+import { repair } from "./roles/RepairRole.ts";
+import { miner } from "./roles/MinerRole.ts";
+import { carry } from "./roles/CarryRole.ts";
+import { command } from "./roles/CommandRole.ts";
 
-export const roles = new Map<number, CreepRoleHandler>([
-  [melee.id, melee],
-  [builder.id, builder],
-  [upgrader.id, upgrader],
-  [repair.id, repair],
-  [miner.id, miner],
-  [carry.id, carry],
-  [command.id, command],
+export const roles = new Map<string, CreepRoleHandler>([
+  [melee.name, melee],
+  [builder.name, builder],
+  [upgrader.name, upgrader],
+  [repair.name, repair],
+  [miner.name, miner],
+  [carry.name, carry],
+  [command.name, command],
 ]);

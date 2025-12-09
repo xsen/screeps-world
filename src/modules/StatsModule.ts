@@ -1,5 +1,14 @@
-export const stats: StatsModule = {
-  start: function () {
+class StatsModule implements StatsModule {
+  private static instance: StatsModule;
+
+  create(): StatsModule {
+    if (!StatsModule.instance) {
+      StatsModule.instance = new StatsModule();
+    }
+    return StatsModule.instance;
+  }
+
+  start(): void {
     if (Game.time % 35 === 0) {
       for (const name in Memory.creeps) {
         if (!(name in Game.creeps)) {
@@ -7,8 +16,9 @@ export const stats: StatsModule = {
         }
       }
     }
-  },
-  execute: (room) => {
+  }
+
+  execute(room: Room): void {
     if (!room.memory.stats) {
       room.memory.stats = {
         sourcesCount: room.find(FIND_SOURCES).length,
@@ -21,8 +31,9 @@ export const stats: StatsModule = {
         FIND_CONSTRUCTION_SITES,
       ).length;
     }
-  },
-  finish: function () {
+  }
+
+  finish(): void {
     if (Game.time % 11 === 0) {
       const stats: GameStats = {
         gcl: {
@@ -61,5 +72,7 @@ export const stats: StatsModule = {
       RawMemory.setActiveSegments([0]);
       RawMemory.segments[0] = JSON.stringify(stats);
     }
-  },
-};
+  }
+}
+
+export const statsModule = new StatsModule();

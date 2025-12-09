@@ -1,8 +1,8 @@
-import { miner } from "../creeps/roles/miner.ts";
-import { carry } from "../creeps/roles/carry.ts";
-import { upgrader } from "../creeps/roles/upgrader.ts";
-import { builder } from "../creeps/roles/builder.ts";
-import { repair } from "../creeps/roles/repair.ts";
+import { repair } from "../creeps/roles/RepairRole.ts";
+import { miner } from "../creeps/roles/MinerRole.ts";
+import { carry } from "../creeps/roles/CarryRole.ts";
+import { upgrader } from "../creeps/roles/UpgraderRole.ts";
+import { builder } from "../creeps/roles/BuilderRole.ts";
 
 export const autoPlan: { [role: string]: AutoSpawnPlan } = {
   [miner.name]: {

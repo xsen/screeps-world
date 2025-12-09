@@ -1,10 +1,9 @@
 import profiler from "screeps-profiler";
 
-export const melee: CreepRoleHandler = {
-  id: 1,
-  name: "melee",
+class MeleeRole {
+  public name = "melee";
 
-  run: function (creep: Creep) {
+  public run(creep: Creep): void {
     const target =
       creep.pos.findClosestByPath(FIND_HOSTILE_CREEPS) ||
       creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES);
@@ -21,6 +20,8 @@ export const melee: CreepRoleHandler = {
     ) {
       creep.customMoveTo(creep.room.controller);
     }
-  },
-};
+  }
+}
+
+export const melee = new MeleeRole();
 profiler.registerObject(melee, "Creep.Role.Melee");

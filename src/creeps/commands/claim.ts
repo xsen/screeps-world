@@ -9,7 +9,7 @@ export const claim: CreepCommandHandler = {
     const controller = creep.room.controller;
 
     if (!controller) {
-      console.log("Error: position has no container");
+      console.log("Error: position has no controller");
       return true;
     }
 

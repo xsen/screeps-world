@@ -1,33 +1,33 @@
 import "./extensions/Creep.ts";
 
-import { defense } from "./modules/defense.ts";
-import { executor } from "./modules/executor.ts";
-import { flags } from "./modules/flags.ts";
-import { spawner } from "./modules/spawner.ts";
 import profiler from "screeps-profiler";
-import { stats } from "./modules/stats.ts";
+import { defenseModule } from "./modules/DefenseModule.ts";
+import { executorModule } from "./modules/ExecutorModule.ts";
+import { spawnerModule } from "./modules/SpawnerModule.ts";
+import { statsModule } from "./modules/StatsModule.ts";
+import { flagsModule } from "./modules/FlagsModule.ts";
 
 profiler.enable();
 
 export const loop = () =>
   profiler.wrap(() => {
-    stats.start();
+    statsModule.start();
 
-    defense.create();
-    spawner.create();
+    defenseModule.create();
+    spawnerModule.create();
 
-    executor.create().execute();
+    executorModule.create().execute();
 
     const rooms = Game.rooms;
     for (const roomName in rooms) {
       const room = rooms[roomName];
       if (room.controller?.my == false) continue;
 
-      stats.execute(room);
-      defense.execute(room);
-      spawner.execute(room);
+      statsModule.execute(room);
+      defenseModule.execute(room);
+      spawnerModule.execute(room);
     }
 
-    flags.create().execute();
-    stats.finish();
+    flagsModule.create().execute();
+    statsModule.finish();
   });

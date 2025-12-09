@@ -1,9 +1,14 @@
-export const flags: GlobalModule = {
-  create: function () {
-    return this;
-  },
+class FlagsModule implements GlobalModule {
+  private static instance: FlagsModule;
 
-  execute: function () {
+  create(): GlobalModule {
+    if (!FlagsModule.instance) {
+      FlagsModule.instance = new FlagsModule();
+    }
+    return FlagsModule.instance;
+  }
+
+  execute(): void {
     if (Game.time % 99 === 0) {
       Memory.avoidPositions = {};
 
@@ -19,5 +24,7 @@ export const flags: GlobalModule = {
         }
       }
     }
-  },
-};
+  }
+}
+
+export const flagsModule = new FlagsModule();

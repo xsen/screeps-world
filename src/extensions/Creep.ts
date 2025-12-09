@@ -1,11 +1,16 @@
-Creep.prototype.getCreepTarget = function <T extends AnyStructure | Source>() {
+import { EnergyManager, EnergyTarget } from "../managers/EnergyManager.ts";
+import { DEBUG_MODE } from "../config/config"; // Импортируем DEBUG_MODE
+
+Creep.prototype.getCreepTarget = function <
+  T extends AnyStructure | Source | Resource,
+>() {
   return this.memory.targetId
     ? (Game.getObjectById(this.memory.targetId) as T)
     : null;
 };
 
 Creep.prototype.setCreepTarget = function (
-  target: AnyStructure | Source | null,
+  target: AnyStructure | Source | Resource | null,
 ) {
   this.memory.targetId = target?.id;
 };
@@ -16,6 +21,12 @@ Creep.prototype.setStatus = function (status: string) {
 
 Creep.prototype.getStatus = function () {
   return this.memory.status;
+};
+
+Creep.prototype.debugSay = function (message: string) {
+  if (DEBUG_MODE) {
+    this.say(message);
+  }
 };
 
 Creep.prototype.customMoveTo = function (
@@ -44,46 +55,23 @@ Creep.prototype.customMoveTo = function (
   return this.moveTo(target, opts);
 };
 
-// @todo: refactor
 Creep.prototype.getEnergy = function () {
-  if (this.room.controller?.my && this.room.memory.isSafe) {
-    const pickup = this.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
-      filter: (r) => r.resourceType == RESOURCE_ENERGY,
-    });
-    if (pickup) {
-      if (this.pickup(pickup) == ERR_NOT_IN_RANGE) {
-        this.moveTo(pickup);
-      }
-      return;
-    }
+  if (this.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+    this.setCreepTarget(null);
+    return;
   }
-  const containers = this.room
-    .find(FIND_STRUCTURES, {
-      filter: (structure) => {
-        if (
-          structure.structureType == STRUCTURE_CONTAINER ||
-          structure.structureType == STRUCTURE_STORAGE
-        ) {
-          return (
-            structure.store.getUsedCapacity(RESOURCE_ENERGY) >=
-            this.store.getFreeCapacity()
-          );
-        }
-        return false;
-      },
-    })
-    .sort((s1, s2) => s1.pos.getRangeTo(this) - s2.pos.getRangeTo(this));
 
-  const target = containers.length > 0 ? containers[0] : this.room.storage;
+  let target = this.getCreepTarget<EnergyTarget>();
+
+  if (!EnergyManager.isTargetValid(target, this)) {
+    target = EnergyManager.findNewTarget(this);
+    this.setCreepTarget(target);
+  }
+
   if (target) {
-    if (this.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-      this.moveTo(target);
-    }
+    EnergyManager.execute(this, target);
   } else {
-    const source = this.pos.findClosestByPath(FIND_SOURCES);
-    if (source && this.harvest(source) == ERR_NOT_IN_RANGE) {
-      this.moveTo(source);
-    }
+    this.debugSay("😴");
   }
 };
 

@@ -59,7 +59,7 @@ declare global {
   interface Creep {
     memory: CreepMemory;
 
-    getEnergy(range?: number): void;
+    getEnergy(): void;
 
     getEnergyFromTombstone(): boolean;
 
@@ -67,9 +67,9 @@ declare global {
 
     setStatus(status: string): void;
 
-    getCreepTarget<T extends AnyStructure | Source>(): T | null;
+    getCreepTarget<T extends AnyStructure | Source | Resource>(): T | null;
 
-    setCreepTarget(target: AnyStructure | Source | null): void;
+    setCreepTarget(target: AnyStructure | Source | Resource | null): void;
 
     customMoveTo(
       target:
@@ -79,15 +79,17 @@ declare global {
           },
       opts?: MoveToOpts,
     ): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND;
+
+    debugSay(message: string): void;
   }
 
   interface CreepMemory {
     room: string;
     status: string;
-    role?: string; //@todo
-    roleId: number;
+    role: string;
+    roleId?: number;
     generation: number;
-    targetId?: Id<AnyStructure | Source>;
+    targetId?: Id<AnyStructure | Source | Resource>;
     commands?: CreepCommand[];
     commandId?: number;
     nearbyContainerId?: Id<StructureContainer>;
@@ -105,7 +107,7 @@ declare global {
   }
 
   interface ManualSpawnPlan {
-    handlerId: number;
+    handlerName: string;
     body: SpawnCreepBody[];
     generation: number;
     limit: number;
@@ -113,6 +115,8 @@ declare global {
     targetRoom?: string;
     commands?: CreepCommand[];
   }
+
+  type ManualSpawnPlansByRoom = Record<string, ManualSpawnPlan[]>;
 
   interface SpawnCreepBody {
     count: number;
@@ -129,20 +133,7 @@ declare global {
     execute: (room: Room) => void;
   }
 
-  interface StatsModule {
-    statistics?: GameStats;
-    start: () => void;
-    execute: (room: Room) => void;
-    finish: () => void;
-  }
-
-  interface RoomModuleData {
-    room: Room;
-    creeps: Creep[];
-  }
-
   interface CreepRoleHandler {
-    id: number;
     name: string;
     run: (creep: Creep) => void;
   }
