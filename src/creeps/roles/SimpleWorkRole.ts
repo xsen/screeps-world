@@ -9,7 +9,7 @@
 export const CREEP_STATUS_GETTING_ENERGY = "gettingEnergy";
 export const CREEP_STATUS_WORKING = "working";
 
-export abstract class SimpleWorkRole {
+export abstract class SimpleWorkRole implements CreepRoleHandler {
   public abstract name: string;
 
   /**

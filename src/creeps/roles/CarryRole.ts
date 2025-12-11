@@ -1,14 +1,20 @@
 import { WorkManager } from "../../managers/WorkManager";
 import profiler from "screeps-profiler";
 
-// Определяем уникальные статусы для роли 'carry'
 const CARRY_STATUS_REFILLING = "refilling";
 const CARRY_STATUS_DELIVERING = "delivering";
 const CARRY_STATUS_STORING = "storing";
-const CARRY_STATUS_PICKUP_DROPPED = "pickupDropped"; // Новый статус
+const CARRY_STATUS_PICKUP_DROPPED = "pickupDropped";
 
-class CarryRole {
+class CarryRole implements CreepRoleHandler {
   public name = "carry";
+  public defaultMinBody: SpawnCreepBody[] = [
+    { count: 1, body: CARRY },
+    { count: 1, body: MOVE },
+  ];
+  public defaultPriority = 10;
+  public defaultIsEmergency = true;
+  public defaultPreSpawnTicks = 50;
 
   /**
    * Основной метод выполнения роли носильщика.
@@ -29,7 +35,7 @@ class CarryRole {
       case CARRY_STATUS_STORING:
         WorkManager.deliverEnergyToStorage(creep);
         break;
-      case CARRY_STATUS_PICKUP_DROPPED: // Новый кейс
+      case CARRY_STATUS_PICKUP_DROPPED:
         pickupDroppedEnergy(creep);
         break;
       default:
@@ -120,37 +126,41 @@ const refillEnergy = (creep: Creep): void => {
   }
 
   if (!target) {
-    // Приоритет 1: Storage, если в нем есть энергия
+    const hasPrimaryTargets = WorkManager.hasPrimaryDeliveryTargets(creep.room);
+
+    // Если есть первичные цели (spawn, extension, tower), то можно брать энергию из хранилища.
     if (
+      hasPrimaryTargets &&
       creep.room.storage &&
       creep.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 0
     ) {
       target = creep.room.storage;
-    } else {
-      // Приоритет 2: Ближайший контейнер, который может полностью заполнить крипа
-      target = creep.pos.findClosestByPath<StructureContainer>(
+    }
+
+    // Если цель не хранилище (или его нет), ищем в контейнерах.
+    if (!target) {
+      const containersWithEnergy = creep.room.find<StructureContainer>(
         FIND_STRUCTURES,
         {
-          filter: (structure) =>
-            structure.structureType === STRUCTURE_CONTAINER &&
-            structure.store.getUsedCapacity(RESOURCE_ENERGY) >=
-              creep.store.getCapacity(),
+          filter: (s) =>
+            s.structureType === STRUCTURE_CONTAINER &&
+            s.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
         },
       );
+
+      if (containersWithEnergy.length > 0) {
+        // Ищем самый полный контейнер, чтобы эффективно опустошать его.
+        target = containersWithEnergy.sort(
+          (a, b) =>
+            b.store.getUsedCapacity(RESOURCE_ENERGY) -
+            a.store.getUsedCapacity(RESOURCE_ENERGY),
+        )[0];
+      }
     }
   }
 
   if (!target) {
-    // Приоритет 3: Любой ближайший контейнер с энергией (если нет storage и достаточно полных контейнеров)
-    target = creep.pos.findClosestByPath<StructureContainer>(FIND_STRUCTURES, {
-      filter: (structure) =>
-        structure.structureType === STRUCTURE_CONTAINER &&
-        structure.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
-    });
-  }
-
-  if (!target) {
-    return;
+    return; // Если источников энергии нет, ничего не делаем.
   }
 
   creep.setCreepTarget(target);

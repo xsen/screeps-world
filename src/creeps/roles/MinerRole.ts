@@ -4,8 +4,15 @@ import { utils } from "../../utils";
 const MINER_STATUS_HARVESTING = "harvesting";
 const MINER_STATUS_TRANSFERRING = "transferring";
 
-class MinerRole {
+class MinerRole implements CreepRoleHandler {
   public name = "miner";
+  public defaultIsEmergency = false;
+  public defaultMinBody: SpawnCreepBody[] = [
+    { count: 1, body: WORK },
+    { count: 1, body: MOVE },
+  ];
+  public defaultPriority = 10;
+  public defaultPreSpawnTicks = 250;
 
   public run(creep: Creep): void {
     this.switchState(creep);
@@ -34,7 +41,7 @@ class MinerRole {
     const source = getTargetSource(creep);
 
     if (source == null) {
-      utils.log("Error miner: source not found", creep.memory.targetId);
+      utils.log("Error miner: source not found for creep", creep.name);
       return;
     }
 
@@ -102,27 +109,44 @@ const getTargetSource = (creep: Creep): Source | null => {
     return Game.getObjectById<Source>(creep.memory.targetId);
   }
 
-  const otherCreeps = creep.room.find(FIND_MY_CREEPS, {
-    filter: (cr) => cr.memory.role === creep.memory.role && cr.id != creep.id, // Используем имя роли
-  });
-
-  if (otherCreeps.length == 0) {
-    return creep.pos.findClosestByPath(FIND_SOURCES);
-  }
-
-  const sourceCounts = creep.room.find(FIND_SOURCES).map((source) => {
-    const count = otherCreeps.filter(
-      (cr) => cr.memory.targetId == source.id,
-    ).length;
-    return { source: source, count };
-  });
-
-  const minCountSource = sourceCounts.reduce((prev, curr) =>
-    prev.count < curr.count ? prev : curr,
+  const sources = creep.room.find(FIND_SOURCES);
+  const minersInRoom = Object.values(Game.creeps).filter(
+    (cr) =>
+      cr.memory.room === creep.room.name &&
+      cr.memory.role === creep.memory.role,
   );
 
-  creep.memory.targetId = minCountSource.source.id;
-  return minCountSource.source;
+  const sourceAssignmentCounts: { [sourceId: string]: number } = {};
+  for (const source of sources) {
+    sourceAssignmentCounts[source.id] = 0;
+  }
+
+  for (const minerCreep of minersInRoom) {
+    if (
+      minerCreep.memory.targetId &&
+      sourceAssignmentCounts[minerCreep.memory.targetId] !== undefined
+    ) {
+      sourceAssignmentCounts[minerCreep.memory.targetId]++;
+    }
+  }
+
+  let leastOccupiedSource: Source | null = null;
+  let minCount = Infinity;
+
+  for (const source of sources) {
+    const count = sourceAssignmentCounts[source.id] || 0;
+    if (count < minCount) {
+      minCount = count;
+      leastOccupiedSource = source;
+    }
+  }
+
+  if (leastOccupiedSource) {
+    creep.memory.targetId = leastOccupiedSource.id;
+    return leastOccupiedSource;
+  }
+
+  return null;
 };
 
 export const miner = new MinerRole();

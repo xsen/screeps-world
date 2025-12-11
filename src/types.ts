@@ -95,18 +95,12 @@ declare global {
     nearbyContainerId?: Id<StructureContainer>;
   }
 
-  interface AutoSpawnPlan {
-    handler: CreepRoleHandler;
-    baseBody: BodyPartConstant[];
-    scaling: BodyPartConstant[];
-    minCount: number | ((room: Room) => number);
-    maxCount: number | ((room: Room) => number);
-    priority: number;
-    maxCost: number;
-    energyReserve?: number;
+  interface RoomModule {
+    create: () => RoomModule;
+    execute: (room: Room) => void;
   }
 
-  interface ManualSpawnPlan {
+  interface SpawnPlan {
     handlerName: string;
     body: SpawnCreepBody[];
     generation: number;
@@ -114,9 +108,13 @@ declare global {
     target?: string;
     targetRoom?: string;
     commands?: CreepCommand[];
+    isEmergency?: boolean;
+    minBody?: SpawnCreepBody[];
+    priority?: number;
+    preSpawnTicks?: number;
   }
 
-  type ManualSpawnPlansByRoom = Record<string, ManualSpawnPlan[]>;
+  type SpawnPlansByRoom = Record<string, SpawnPlan[]>;
 
   interface SpawnCreepBody {
     count: number;
@@ -136,6 +134,10 @@ declare global {
   interface CreepRoleHandler {
     name: string;
     run: (creep: Creep) => void;
+    defaultMinBody?: SpawnCreepBody[];
+    defaultIsEmergency?: boolean;
+    defaultPriority?: number;
+    defaultPreSpawnTicks?: number;
   }
 
   interface CreepCommand {

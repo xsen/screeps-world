@@ -9,7 +9,8 @@ export class WorkManager {
   public static build(creep: Creep): boolean {
     const target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
     if (target) {
-      if (creep.build(target) === ERR_NOT_IN_RANGE) {
+      creep.build(target);
+      if (creep.pos.getRangeTo(target) > 1) {
         creep.customMoveTo(target);
       }
       return true;
@@ -25,7 +26,8 @@ export class WorkManager {
   public static upgrade(creep: Creep): boolean {
     const controller = creep.room.controller;
     if (controller) {
-      if (creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
+      creep.upgradeController(controller);
+      if (creep.pos.getRangeTo(controller) > 1) {
         creep.customMoveTo(controller);
       }
       return true;

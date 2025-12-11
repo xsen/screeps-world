@@ -1,6 +1,6 @@
 import profiler from "screeps-profiler";
 
-class MeleeRole {
+class MeleeRole implements CreepRoleHandler {
   public name = "melee";
 
   public run(creep: Creep): void {

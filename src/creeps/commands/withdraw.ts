@@ -1,9 +1,8 @@
 export const withdraw: CreepCommandHandler = {
   id: "withdraw",
   run: function (creep, position) {
-    if (creep.room.name != position.roomName) {
-      creep.customMoveTo(position);
-      return false;
+    if (creep.store.getFreeCapacity() === 0) {
+      return true;
     }
 
     const target = creep.room
@@ -11,19 +10,33 @@ export const withdraw: CreepCommandHandler = {
       .find((structure) => {
         return (
           structure.structureType == STRUCTURE_CONTAINER ||
+          structure.structureType == STRUCTURE_TERMINAL ||
           structure.structureType == STRUCTURE_STORAGE
         );
-      });
+      }) as
+      | StructureStorage
+      | StructureContainer
+      | StructureTerminal
+      | undefined;
 
     if (!target) {
-      console.log("Error: position has no container or storage");
-      return true;
+      console.log(
+        "Error: target not found for creep",
+        creep.name,
+        "position",
+        position,
+      );
+    }
+
+    if (!target || target.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+      return creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
     }
 
     const res = creep.withdraw(target, RESOURCE_ENERGY);
     if (res == ERR_NOT_IN_RANGE) {
       creep.customMoveTo(target);
     }
-    return res == OK;
+
+    return false;
   },
 };

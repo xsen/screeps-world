@@ -1,9 +1,8 @@
 export const transfer: CreepCommandHandler = {
   id: "transfer",
   run: function (creep, position) {
-    if (creep.room.name != position.roomName) {
-      creep.customMoveTo(position);
-      return false;
+    if (creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+      return true;
     }
 
     const target = creep.room
@@ -11,13 +10,26 @@ export const transfer: CreepCommandHandler = {
       .find((structure) => {
         return (
           structure.structureType == STRUCTURE_CONTAINER ||
+          structure.structureType == STRUCTURE_TERMINAL ||
           structure.structureType == STRUCTURE_STORAGE
         );
-      });
+      }) as
+      | StructureStorage
+      | StructureContainer
+      | StructureTerminal
+      | undefined;
 
     if (!target) {
-      console.log("Error: position has no container or storage");
-      return true;
+      console.log(
+        "Error: target not found for creep",
+        creep.name,
+        "position",
+        position,
+      );
+    }
+
+    if (!target || target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+      return false;
     }
 
     const res = creep.transfer(target, RESOURCE_ENERGY);
@@ -25,6 +37,6 @@ export const transfer: CreepCommandHandler = {
       creep.customMoveTo(target);
     }
 
-    return res == OK;
+    return false;
   },
 };
