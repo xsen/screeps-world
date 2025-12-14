@@ -41,25 +41,29 @@ export abstract class SimpleWorkRole implements CreepRoleHandler {
    * Переключает состояние крипа в зависимости от его заполненности.
    */
   private switchState(creep: Creep): void {
+    const currentStatus = creep.getStatus();
+    const usedEnergy = creep.store.getUsedCapacity(RESOURCE_ENERGY);
+    const freeCapacity = creep.store.getFreeCapacity(RESOURCE_ENERGY);
+
     // Если крип НЕ добывает энергию и у него 0 энергии, переключаем его на добычу.
-    if (
-      creep.getStatus() !== CREEP_STATUS_GETTING_ENERGY &&
-      creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0
-    ) {
+    if (currentStatus !== CREEP_STATUS_GETTING_ENERGY && usedEnergy === 0) {
       creep.setStatus(CREEP_STATUS_GETTING_ENERGY);
+      creep.setCreepTarget(null);
       creep.debugSay("⚡");
     }
     // Если крип добывает энергию и его трюм полон, переключаем на работу.
     else if (
-      creep.getStatus() === CREEP_STATUS_GETTING_ENERGY &&
-      creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0
+      currentStatus === CREEP_STATUS_GETTING_ENERGY &&
+      freeCapacity === 0
     ) {
       creep.setStatus(CREEP_STATUS_WORKING);
+      creep.setCreepTarget(null);
       creep.debugSay("🚧");
     }
     // Если статус не установлен, по умолчанию отправляем за энергией.
-    else if (!creep.getStatus()) {
+    else if (!currentStatus) {
       creep.setStatus(CREEP_STATUS_GETTING_ENERGY);
+      creep.setCreepTarget(null);
     }
   }
 }

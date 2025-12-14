@@ -132,13 +132,12 @@ export class SpawnManager {
     spawnRoomName: string,
     handler: CreepRoleHandler,
   ): Creep[] {
-    const creeps = Object.values(Game.creeps).filter(
+    return Object.values(Game.creeps).filter(
       (cr) =>
         cr.memory.room === spawnRoomName &&
         cr.memory.role === handler.name &&
         cr.memory.generation === spawnPlan.generation,
     );
-    return creeps;
   }
 
   private _getSpawningCreepMemoryForPlan(
@@ -166,7 +165,7 @@ export class SpawnManager {
   private _getCreepMemory(
     spawnPlan: SpawnPlan,
     handler: CreepRoleHandler,
-    targetId?: Id<AnyStructure | Source | Resource>,
+    targetId?: Id<AnyTarget>,
   ): CreepMemory {
     return {
       role: handler.name,
@@ -184,7 +183,7 @@ export class SpawnManager {
   ): boolean {
     if (!this.spawner) return false;
 
-    const name = `${memory.role}-${memory.generation}-${Game.time}`;
+    const name = `${memory.role.substring(0, 3)}-${memory.generation}-${Game.time}`;
     const result = this.spawner.spawnCreep(body, name, { memory });
 
     if (result === OK) {

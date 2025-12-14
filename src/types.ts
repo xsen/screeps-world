@@ -1,4 +1,12 @@
 declare global {
+  type AnyTarget =
+    | AnyStructure
+    | Source
+    | Resource
+    | Ruin
+    | Tombstone
+    | ConstructionSite;
+
   interface Memory {
     logs: MemoryLogs;
     avoidPositions: { [roomName: string]: RoomPosition[] };
@@ -49,6 +57,11 @@ declare global {
     stats: LocalRoomStats;
     targets: { [targetId: string]: RoomPosition };
     avoidPositions: RoomPosition[];
+    linkCache?: {
+      centralLinkId?: Id<StructureLink>;
+      sourceLinkIds: Id<StructureLink>[];
+      scanTime: number;
+    };
   }
 
   interface LocalRoomStats {
@@ -67,9 +80,9 @@ declare global {
 
     setStatus(status: string): void;
 
-    getCreepTarget<T extends AnyStructure | Source | Resource>(): T | null;
+    getCreepTarget<T extends AnyTarget>(): T | null;
 
-    setCreepTarget(target: AnyStructure | Source | Resource | null): void;
+    setCreepTarget(target: AnyTarget | null): void;
 
     customMoveTo(
       target:
@@ -89,7 +102,7 @@ declare global {
     role: string;
     roleId?: number;
     generation: number;
-    targetId?: Id<AnyStructure | Source | Resource>;
+    targetId?: Id<AnyTarget>;
     commands?: CreepCommand[];
     commandId?: number;
     nearbyContainerId?: Id<StructureContainer>;

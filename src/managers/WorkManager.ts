@@ -1,5 +1,3 @@
-export type WorkTarget = ConstructionSite | Structure | StructureController;
-
 export class WorkManager {
   /**
    * Выполняет работу строителя: строит.
@@ -7,8 +5,16 @@ export class WorkManager {
    * @returns true, если работа была найдена и начата/продолжена.
    */
   public static build(creep: Creep): boolean {
-    const target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+    let target: ConstructionSite | null =
+      creep.getCreepTarget<ConstructionSite>();
+
+    if (!target) {
+      target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+    }
+
     if (target) {
+      creep.setCreepTarget(target);
+
       creep.build(target);
       if (creep.pos.getRangeTo(target) > 1) {
         creep.customMoveTo(target);
@@ -41,32 +47,25 @@ export class WorkManager {
    * @returns true, если работа была найдена и начата/продолжена.
    */
   public static repair(creep: Creep): boolean {
-    let target: AnyStructure | null = null;
+    let target: AnyStructure | null = creep.getCreepTarget<AnyStructure>();
 
-    if (creep.memory.targetId) {
-      const storedTarget = creep.getCreepTarget<AnyStructure>();
-      if (storedTarget && storedTarget.hits < storedTarget.hitsMax) {
-        target = storedTarget;
-      } else {
-        creep.setCreepTarget(null);
-      }
-    }
-
-    if (!target) {
+    if (!target || target.hits === target.hitsMax) {
+      target = null;
       target = this.getRepairTarget(creep);
     }
 
-    if (target && target.hits < target.hitsMax) {
+    if (target) {
       creep.setCreepTarget(target);
-      if (creep.repair(target) === ERR_NOT_IN_RANGE) {
+
+      creep.repair(target);
+      if (creep.pos.getRangeTo(target) > 1) {
         creep.customMoveTo(target);
       }
       return true;
-    } else {
-      creep.setCreepTarget(null);
-
-      return this.repairDefense(creep);
     }
+
+    creep.setCreepTarget(null);
+    return this.repairDefense(creep);
   }
 
   /**
@@ -79,21 +78,25 @@ export class WorkManager {
       StructureExtension | StructureSpawn | StructureTower
     >();
 
-    if (target && target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+    if (!target || target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
       target = null;
-      creep.setCreepTarget(null);
-    }
-
-    if (!target) {
-      target =
-        this.getFreeStructures(creep.room).sort(
-          (s1, s2) => s1.pos.getRangeTo(creep) - s2.pos.getRangeTo(creep),
-        )[0] || null;
+      const potentialTargets = this.getFreeStructures(creep.room);
+      if (potentialTargets.length > 0) {
+        target = creep.pos.findClosestByPath(potentialTargets);
+      }
     }
 
     if (target) {
       creep.setCreepTarget(target);
-      if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+      const amountToTransfer = Math.min(
+        creep.store.getUsedCapacity(RESOURCE_ENERGY),
+        target.store.getFreeCapacity(RESOURCE_ENERGY),
+      );
+
+      if (
+        creep.transfer(target, RESOURCE_ENERGY, amountToTransfer) ===
+        ERR_NOT_IN_RANGE
+      ) {
         creep.customMoveTo(target);
       }
       return true;
@@ -111,42 +114,41 @@ export class WorkManager {
   }
 
   /**
-   * Доставляет энергию в хранилище или контейнеры.
-   * @param creep Крип-носильщик.
+   * Чинит оборонительные сооружения (стены, рампарты).
+   * @param creep Крип.
    * @returns true, если работа была найдена и начата/продолжена.
    */
-  public static deliverEnergyToStorage(creep: Creep): boolean {
-    let target: StructureStorage | StructureContainer | null =
-      creep.getCreepTarget<StructureStorage | StructureContainer>();
+  public static repairDefense(creep: Creep): boolean {
+    let target: AnyStructure | null = creep.getCreepTarget<AnyStructure>();
 
-    if (target && target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+    if (!target || target.hits === target.hitsMax) {
       target = null;
-      creep.setCreepTarget(null);
-    }
+      const repairThresholds = [
+        5000, 10000, 30000, 50000, 100000, 300000, 500000, 700000, 1000000,
+        1500000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000, 10000000,
+        15000000, 20000000, 30000000, 50000000, 75000000, 100000000, 150000000,
+        200000000, 250000000, 300000000,
+      ];
 
-    if (!target) {
-      // Приоритет: Storage
-      if (
-        creep.room.storage &&
-        creep.room.storage.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-      ) {
-        target = creep.room.storage;
-      } else {
-        // Если storage нет или он полон, ищем ближайший контейнер с свободным местом
-        target = creep.pos.findClosestByPath<StructureContainer>(
-          FIND_STRUCTURES,
-          {
-            filter: (structure) =>
-              structure.structureType === STRUCTURE_CONTAINER &&
-              structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0,
-          },
-        );
+      for (const h of repairThresholds) {
+        const potentialTarget = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+          filter: (s) =>
+            s.hits < h &&
+            (s.structureType === STRUCTURE_WALL ||
+              s.structureType === STRUCTURE_RAMPART),
+        });
+        if (potentialTarget) {
+          target = potentialTarget;
+          break;
+        }
       }
     }
 
     if (target) {
       creep.setCreepTarget(target);
-      if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+
+      creep.repair(target);
+      if (creep.pos.getRangeTo(target) > 1) {
         creep.customMoveTo(target);
       }
       return true;
@@ -176,60 +178,33 @@ export class WorkManager {
   }
 
   /**
-   * Чинит оборонительные сооружения (стены, рампарты).
-   * @param creep Крип.
-   * @returns true, если работа была найдена и начата/продолжена.
-   */
-  private static repairDefense(creep: Creep): boolean {
-    const repairThresholds = [
-      5000, 10000, 30000, 50000, 100000, 300000, 500000, 700000, 1000000,
-      1500000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000, 10000000,
-      15000000, 20000000, 30000000, 50000000, 75000000, 100000000, 150000000,
-      200000000, 250000000, 300000000,
-    ];
-
-    for (const h of repairThresholds) {
-      const target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-        filter: (s) =>
-          s.hits < h &&
-          (s.structureType === STRUCTURE_WALL ||
-            s.structureType === STRUCTURE_RAMPART),
-      });
-
-      if (target) {
-        creep.setCreepTarget(target); // Сохраняем цель
-        if (creep.repair(target) === ERR_NOT_IN_RANGE) {
-          creep.customMoveTo(target);
-        }
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Вспомогательный метод: ищет структуры, которым нужна энергия.
+   * Вспомогательный метод: ищет структуры, которым нужна энергия, в порядке приоритета.
    * @param room Комната.
    * @returns Массив структур.
    */
   private static getFreeStructures(
     room: Room,
   ): (StructureExtension | StructureSpawn | StructureTower)[] {
-    const types: StructureConstant[] = [
-      STRUCTURE_EXTENSION,
-      STRUCTURE_SPAWN,
-      STRUCTURE_TOWER,
-    ];
-
-    return room.find(FIND_STRUCTURES, {
-      filter: (
-        structure: StructureExtension | StructureSpawn | StructureTower,
-      ) => {
-        return (
-          types.includes(structure.structureType) &&
-          structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-        );
+    // Приоритет 1: Спауны и расширения
+    const primaryTargets = room.find<StructureSpawn | StructureExtension>(
+      FIND_STRUCTURES,
+      {
+        filter: (s) =>
+          (s.structureType === STRUCTURE_SPAWN ||
+            s.structureType === STRUCTURE_EXTENSION) &&
+          s.store.getFreeCapacity(RESOURCE_ENERGY) > 0,
       },
+    );
+
+    if (primaryTargets.length > 0) {
+      return primaryTargets;
+    }
+
+    // Приоритет 2: Башни (только если спауны и расширения полные)
+    return room.find<StructureTower>(FIND_STRUCTURES, {
+      filter: (s) =>
+        s.structureType === STRUCTURE_TOWER &&
+        s.store.getFreeCapacity(RESOURCE_ENERGY) > 0,
     });
   }
 }

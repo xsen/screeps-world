@@ -1,17 +1,12 @@
-import { EnergyManager, EnergyTarget } from "../managers/EnergyManager.ts";
 import { DEBUG_MODE } from "../config/config"; // Импортируем DEBUG_MODE
 
-Creep.prototype.getCreepTarget = function <
-  T extends AnyStructure | Source | Resource,
->() {
+Creep.prototype.getCreepTarget = function <T extends AnyTarget>() {
   return this.memory.targetId
     ? (Game.getObjectById(this.memory.targetId) as T)
     : null;
 };
 
-Creep.prototype.setCreepTarget = function (
-  target: AnyStructure | Source | Resource | null,
-) {
+Creep.prototype.setCreepTarget = function (target: AnyTarget | null) {
   this.memory.targetId = target?.id;
 };
 
@@ -61,15 +56,89 @@ Creep.prototype.getEnergy = function () {
     return;
   }
 
-  let target = this.getCreepTarget<EnergyTarget>();
+  let target = this.getCreepTarget<
+    StructureLink | StructureContainer | StructureStorage | Resource
+  >();
 
-  if (!EnergyManager.isTargetValid(target, this)) {
-    target = EnergyManager.findNewTarget(this);
-    this.setCreepTarget(target);
+  // Проверяем валидность закэшированной цели
+  if (
+    target &&
+    (("store" in target &&
+      target.store.getUsedCapacity(RESOURCE_ENERGY) === 0) ||
+      ("amount" in target && target.amount === 0))
+  ) {
+    target = null;
+    this.setCreepTarget(null);
+  }
+
+  // Если цели нет или она невалидна, ищем новую
+  if (!target) {
+    const sources: (
+      | StructureLink
+      | StructureContainer
+      | StructureStorage
+      | Resource
+    )[] = [];
+
+    // 1. Links
+    const links = this.room.find<StructureLink>(FIND_STRUCTURES, {
+      filter: (s) =>
+        s.structureType === STRUCTURE_LINK &&
+        s.store.getUsedCapacity(RESOURCE_ENERGY) > 0,
+    });
+    sources.push(...links);
+
+    // 2. Containers
+    const containers = this.room.find<StructureContainer>(FIND_STRUCTURES, {
+      filter: (s) =>
+        s.structureType === STRUCTURE_CONTAINER &&
+        s.store.getUsedCapacity(RESOURCE_ENERGY) > 50,
+    });
+    sources.push(...containers);
+
+    // 3. Storage
+    if (
+      this.room.storage &&
+      this.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+    ) {
+      sources.push(this.room.storage);
+    }
+
+    // 4. Dropped energy
+    const droppedEnergy = this.room.find(FIND_DROPPED_RESOURCES, {
+      filter: (r) => r.resourceType === RESOURCE_ENERGY && r.amount > 100,
+    });
+    sources.push(...droppedEnergy);
+
+    if (sources.length > 0) {
+      const newTarget = this.pos.findClosestByPath(sources);
+      if (newTarget) {
+        target = newTarget;
+        this.setCreepTarget(newTarget); // Кэшируем новую цель
+      }
+    }
   }
 
   if (target) {
-    EnergyManager.execute(this, target);
+    let moveResult:
+      | CreepMoveReturnCode
+      | ERR_NO_PATH
+      | ERR_INVALID_TARGET
+      | ERR_NOT_FOUND
+      | undefined;
+    if (target instanceof Resource) {
+      if (this.pickup(target) === ERR_NOT_IN_RANGE) {
+        moveResult = this.customMoveTo(target);
+      }
+    } else {
+      if (this.withdraw(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+        moveResult = this.customMoveTo(target);
+      }
+    }
+
+    if (moveResult === ERR_NO_PATH) {
+      this.setCreepTarget(null);
+    }
   } else {
     this.debugSay("😴");
   }
