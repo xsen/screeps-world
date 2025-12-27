@@ -1,5 +1,3 @@
-import profiler from "screeps-profiler";
-
 class MeleeRole implements CreepRoleHandler {
   public name = "melee";
 
@@ -15,13 +13,19 @@ class MeleeRole implements CreepRoleHandler {
     }
 
     if (
-      creep.room.controller?.my &&
+      creep.room.controller &&
+      creep.room.controller.my &&
       creep.pos.getRangeTo(creep.room.controller) > 6
     ) {
       creep.customMoveTo(creep.room.controller);
     }
   }
+
+  public getSpawnPlans(room: Room): SpawnPlan[] {
+    room.name;
+    // Melee creeps are typically spawned defensively by DefenseModule, not by default plans.
+    return [];
+  }
 }
 
 export const melee = new MeleeRole();
-profiler.registerObject(melee, "Creep.Role.Melee");

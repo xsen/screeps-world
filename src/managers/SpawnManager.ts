@@ -1,14 +1,17 @@
-import { spawnPlan } from "../spawner/spawnPlan.ts";
+import { spawnPlan as manualSpawnPlan } from "../spawner/spawnPlan.ts";
 import { roles } from "../creeps/roles.ts";
 import { utils } from "../utils.ts";
+import { CreepBodyBuilder } from "../spawner/CreepBodyBuilder.ts";
 
 export class SpawnManager {
   private readonly room: Room;
   private readonly spawner: StructureSpawn | undefined;
+  private readonly bodyBuilder: CreepBodyBuilder;
 
   constructor(room: Room) {
     this.room = room;
     this.spawner = room.find(FIND_MY_SPAWNS).find((s) => !s.spawning);
+    this.bodyBuilder = new CreepBodyBuilder();
   }
 
   public run(): void {
@@ -16,282 +19,170 @@ export class SpawnManager {
       return;
     }
 
-    let roomSpawnPlans: SpawnPlan[] = spawnPlan[this.room.name] || [];
-    if (roomSpawnPlans.length === 0) return;
+    const plans = this.getPlansForRoom(this.room);
+    if (plans.length === 0) return;
 
-    roomSpawnPlans.sort((a: SpawnPlan, b: SpawnPlan) => {
-      const handlerA = roles.get(a.handlerName);
-      const handlerB = roles.get(b.handlerName);
+    // Sort by priority DESCENDING (highest first)
+    plans.sort((a, b) => (b.priority || 0) - (a.priority || 0));
 
-      const priorityA =
-        a.priority !== undefined && a.priority !== null
-          ? a.priority
-          : handlerA?.defaultPriority !== undefined &&
-              handlerA?.defaultPriority !== null
-            ? handlerA.defaultPriority
-            : 0;
-      const priorityB =
-        b.priority !== undefined && b.priority !== null
-          ? b.priority
-          : handlerB?.defaultPriority !== undefined &&
-              handlerB?.defaultPriority !== null
-            ? handlerB.defaultPriority
-            : 0;
-
-      return priorityB - priorityA;
-    });
-
-    for (const currentSpawnPlan of roomSpawnPlans) {
-      const handler = roles.get(currentSpawnPlan.handlerName);
+    for (const plan of plans) {
+      const handler = roles.get(plan.handlerName);
       if (!handler) {
-        console.log("Error: no role for spawn plan", currentSpawnPlan);
+        utils.log(
+          `[${this.room.name}][SpawnManager] Error: no role for spawn plan ${plan.handlerName}`,
+        );
         continue;
       }
 
-      const spawnRoomName = currentSpawnPlan.targetRoom || this.room.name;
-
-      const liveCreeps = this._getLiveCreepsForPlan(
-        currentSpawnPlan,
-        spawnRoomName,
-        handler,
-      );
-      const spawningCreepMemory = this._getSpawningCreepMemoryForPlan(
-        currentSpawnPlan,
-        spawnRoomName,
-        handler,
-      );
-
-      const currentCreepCount =
-        liveCreeps.length + (spawningCreepMemory ? 1 : 0);
-
-      // --- Логика спавна ---
-      // 1. Обычный спавн: если крипов меньше лимита и никто не спавнится
-      if (currentCreepCount < currentSpawnPlan.limit) {
-        if (!spawningCreepMemory) {
-          const body = this.buildDynamicBody(currentSpawnPlan, handler);
-          if (!body) {
-            utils.log(
-              `[SpawnManager] Failed to build body for normal spawn of ${currentSpawnPlan.handlerName}.`,
-            );
-            continue;
-          }
-
-          const memory = this._getCreepMemory(currentSpawnPlan, handler);
-
-          if (this._trySpawnCreep(body, memory)) {
-            return; // Спавним только одного крипа за тик
-          } else {
-            utils.log(
-              `[SpawnManager] Failed to initiate normal spawn for ${currentSpawnPlan.handlerName}.`,
-            );
-          }
-        }
+      const result = this.processSpawnPlan(plan, handler);
+      if (result.shouldStop) {
+        return; // Stop processing further plans
       }
-      // 2. Предварительный спавн: если крипов ровно лимит, есть умирающий крип и никто не спавнится
-      else if (currentCreepCount === currentSpawnPlan.limit) {
-        const preSpawnTicks =
-          currentSpawnPlan.preSpawnTicks || handler.defaultPreSpawnTicks;
-
-        if (preSpawnTicks) {
-          const dyingCreep = liveCreeps.find(
-            (creep) => creep.ticksToLive && creep.ticksToLive <= preSpawnTicks,
-          );
-
-          if (dyingCreep && !spawningCreepMemory) {
-            const body = this.buildDynamicBody(currentSpawnPlan, handler);
-            if (!body) {
-              utils.log(
-                `[SpawnManager] Failed to build body for pre-spawn of ${currentSpawnPlan.handlerName}.`,
-              );
-              continue;
-            }
-
-            const memory = this._getCreepMemory(
-              currentSpawnPlan,
-              handler,
-              dyingCreep.memory.targetId,
-            );
-
-            if (this._trySpawnCreep(body, memory)) {
-              return; // Спавним только одного крипа за тик
-            } else {
-              utils.log(
-                `[SpawnManager] Failed to initiate pre-spawn for ${currentSpawnPlan.handlerName}.`,
-              );
-            }
-          }
-        }
-      }
-      // 3. Если крипов больше лимита, ничего не делаем (позволяем избыточным умереть)
-      // Логика здесь не нужна, так как это ожидаемое поведение.
     }
   }
 
-  private _getLiveCreepsForPlan(
-    spawnPlan: SpawnPlan,
+  private getPlansForRoom(room: Room): SpawnPlan[] {
+    // Start with the default plans from roles
+    let allPlans: SpawnPlan[] = [];
+    for (const handler of roles.values()) {
+      try {
+        const plansFromRole = handler.getSpawnPlans(room);
+        if (plansFromRole) {
+          allPlans.push(...plansFromRole);
+        }
+      } catch (e) {
+        utils.log(
+          `[${room.name}][SpawnManager] Error getting spawn plans for role ${handler.name}: ${e}`,
+        );
+      }
+    }
+
+    // Add manual plans if they exist for the room
+    if (manualSpawnPlan[room.name]) {
+      allPlans.push(...manualSpawnPlan[room.name]);
+    }
+
+    return allPlans;
+  }
+
+  private processSpawnPlan(
+    plan: SpawnPlan,
+    handler: CreepRoleHandler,
+  ): { shouldStop: boolean } {
+    const spawnRoomName = plan.targetRoom || this.room.name;
+    const liveCreeps = this.getCreepsForPlan(plan, spawnRoomName, handler);
+    const limit = this.resolveValue(plan.limit, this.room);
+
+    if (liveCreeps.length < limit) {
+      if (this.isAlreadySpawningForPlan(plan, handler)) {
+        return { shouldStop: false };
+      }
+
+      const bodyConfig = this.resolveValue(plan.body, this.room);
+      const body = this.bodyBuilder.build(
+        bodyConfig,
+        plan.minBody,
+        plan.isEmergency,
+        this.room.energyAvailable,
+      );
+
+      if (!body) {
+        // Not enough energy for this high-priority creep.
+        // Stop everything and wait for energy to replenish.
+        return { shouldStop: true };
+      }
+
+      const memory = this.createCreepMemory(plan, handler);
+      const spawned = this.trySpawnCreep(body, memory);
+      // If we spawned something, stop for this tick.
+      return { shouldStop: spawned };
+    }
+    return { shouldStop: false };
+  }
+
+  private resolveValue<T>(value: T | ((room: Room) => T), room: Room): T {
+    if (typeof value === "function") {
+      return (value as (room: Room) => T)(room);
+    }
+    return value;
+  }
+
+  private getCreepsForPlan(
+    plan: SpawnPlan,
     spawnRoomName: string,
     handler: CreepRoleHandler,
   ): Creep[] {
-    return Object.values(Game.creeps).filter(
-      (cr) =>
-        cr.memory.room === spawnRoomName &&
-        cr.memory.role === handler.name &&
-        cr.memory.generation === spawnPlan.generation,
-    );
+    return Object.values(Game.creeps).filter((cr) => {
+      const isSameBase =
+        cr.memory.room === spawnRoomName && cr.memory.role === handler.name;
+      if (!isSameBase) return false;
+
+      // If plan is for a specific target (like a miner), match by targetId
+      if (plan.targetId) {
+        return cr.memory.targetId === plan.targetId;
+      }
+
+      // Otherwise, match by generation (like for different command roles)
+      return cr.memory.generation === plan.generation;
+    });
   }
 
-  private _getSpawningCreepMemoryForPlan(
-    spawnPlan: SpawnPlan,
-    spawnRoomName: string,
+  private isAlreadySpawningForPlan(
+    plan: SpawnPlan,
     handler: CreepRoleHandler,
-  ): CreepMemory | null {
+  ): boolean {
     if (!this.spawner || !this.spawner.spawning) {
-      return null;
+      return false;
     }
-    const spawningCreepName = this.spawner.spawning.name;
-    const spawningCreep = Game.creeps[spawningCreepName];
+    const spawningMemory = Memory.creeps[this.spawner.spawning.name];
 
-    if (
-      spawningCreep &&
-      spawningCreep.memory.room === spawnRoomName &&
-      spawningCreep.memory.role === handler.name &&
-      spawningCreep.memory.generation === spawnPlan.generation
-    ) {
-      return spawningCreep.memory;
+    const isSameBase =
+      spawningMemory.role === handler.name &&
+      spawningMemory.room === (plan.targetRoom || this.room.name);
+    if (!isSameBase) return false;
+
+    if (plan.targetId) {
+      return spawningMemory.targetId === plan.targetId;
     }
-    return null;
+
+    return spawningMemory.generation === plan.generation;
   }
 
-  private _getCreepMemory(
-    spawnPlan: SpawnPlan,
+  private createCreepMemory(
+    plan: SpawnPlan,
     handler: CreepRoleHandler,
-    targetId?: Id<AnyTarget>,
   ): CreepMemory {
     return {
       role: handler.name,
-      generation: spawnPlan.generation,
-      room: spawnPlan.targetRoom || this.room.name,
+      generation: plan.generation,
+      room: plan.targetRoom || this.room.name,
       status: "spawned",
-      commands: spawnPlan.commands,
-      targetId: targetId,
+      commands: this.resolveValue(plan.commands, this.room),
+      targetId: plan.targetId,
     };
   }
 
-  private _trySpawnCreep(
+  private trySpawnCreep(
     body: BodyPartConstant[],
     memory: CreepMemory,
   ): boolean {
     if (!this.spawner) return false;
 
-    const name = `${memory.role.substring(0, 3)}-${memory.generation}-${Game.time}`;
+    const name = `${memory.role.substring(0, 3)}-${memory.generation}${(Game.time % 46656).toString(36)}`;
     const result = this.spawner.spawnCreep(body, name, { memory });
 
     if (result === OK) {
-      console.log(
-        `[SpawnManager] Spawning ${name} in ${this.room.name} for room "${memory.room}" with body [${body}]`,
+      utils.log(
+        `[${this.room.name}][SpawnManager] Spawning ${name} for room "${memory.room}"`,
       );
       return true;
-    } else if (result === ERR_NOT_ENOUGH_ENERGY) {
-      console.log(
-        `[SpawnManager] Not enough energy to spawn ${name} in ${this.room.name}. Required: ${this.calculateCost(body)}, Available: ${this.room.energyAvailable}.`,
-      );
-    } else {
+    }
+
+    if (result !== ERR_NOT_ENOUGH_ENERGY) {
       utils.log(
-        `[SpawnManager] Failed to spawn ${name} in ${this.room.name}. Result: ${result}. Body: [${body}]`,
+        `[${this.room.name}][SpawnManager] Failed to spawn ${name}. Result: ${result}. Body: [${body}]`,
       );
     }
     return false;
-  }
-
-  private buildDynamicBody(
-    spawnPlan: SpawnPlan,
-    handler: CreepRoleHandler,
-  ): BodyPartConstant[] | null {
-    const fullBody = this.buildBody(spawnPlan.body);
-    const fullCost = this.calculateCost(fullBody);
-    const energyAvailable = this.room.energyAvailable;
-
-    if (energyAvailable >= fullCost) {
-      return fullBody;
-    }
-
-    const isEmergency = spawnPlan.isEmergency || handler.defaultIsEmergency;
-    const minBodyConfig = spawnPlan.minBody || handler.defaultMinBody;
-
-    if (!isEmergency || !minBodyConfig) {
-      return null;
-    }
-
-    const minBody = this.buildBody(minBodyConfig);
-    const minCost = this.calculateCost(minBody);
-
-    if (energyAvailable < minCost) {
-      return null;
-    }
-
-    let dynamicBody = [...minBody];
-    let currentCost = minCost;
-
-    const additionalParts = this.getAdditionalParts(fullBody, minBody);
-
-    for (const part of additionalParts) {
-      const partCost = BODYPART_COST[part];
-      if (currentCost + partCost <= energyAvailable) {
-        dynamicBody.push(part);
-        currentCost += partCost;
-      } else {
-        break;
-      }
-    }
-
-    dynamicBody.sort((a, b) => {
-      const order: { [key in BodyPartConstant]: number } = {
-        [TOUGH]: 1,
-        [WORK]: 2,
-        [CARRY]: 3,
-        [MOVE]: 4,
-        [ATTACK]: 5,
-        [RANGED_ATTACK]: 6,
-        [HEAL]: 7,
-        [CLAIM]: 8,
-      };
-      return (order[a] || 99) - (order[b] || 99);
-    });
-
-    return dynamicBody;
-  }
-
-  private getAdditionalParts(
-    fullBody: BodyPartConstant[],
-    minBody: BodyPartConstant[],
-  ): BodyPartConstant[] {
-    const minBodyCounts: { [key: string]: number } = {};
-    for (const part of minBody) {
-      minBodyCounts[part] = (minBodyCounts[part] || 0) + 1;
-    }
-
-    const additionalParts: BodyPartConstant[] = [];
-    for (const part of fullBody) {
-      if (minBodyCounts[part] && minBodyCounts[part] > 0) {
-        minBodyCounts[part]--;
-      } else {
-        additionalParts.push(part);
-      }
-    }
-    return additionalParts;
-  }
-
-  private buildBody(bodyParts: SpawnCreepBody[]): BodyPartConstant[] {
-    const body: BodyPartConstant[] = [];
-    for (const part of bodyParts) {
-      for (let i = 0; i < part.count; i++) {
-        body.push(part.body);
-      }
-    }
-    return body;
-  }
-
-  private calculateCost(parts: BodyPartConstant[]): number {
-    return parts.reduce((sum, part) => sum + BODYPART_COST[part], 0);
   }
 }

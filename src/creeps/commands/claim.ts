@@ -14,7 +14,7 @@ export const claim: CreepCommandHandler = {
     }
 
     creep.claimController(controller);
-    creep.attackController(controller);
+    // creep.attackController(controller);
     // creep.signController(controller, "");
     creep.customMoveTo(controller);
 

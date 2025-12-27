@@ -1,4 +1,17 @@
+export enum TaskStatus {
+  IN_PROGRESS,
+  COMPLETED,
+  FAILED,
+}
+
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace NodeJS {
+    interface Global {
+      tickCache: { [key: string]: any };
+    }
+  }
+
   type AnyTarget =
     | AnyStructure
     | Source
@@ -7,9 +20,11 @@ declare global {
     | Tombstone
     | ConstructionSite;
 
+  // noinspection JSUnusedGlobalSymbols
   interface Memory {
     logs: MemoryLogs;
     avoidPositions: { [roomName: string]: RoomPosition[] };
+    cache?: { [key: string]: any };
   }
 
   interface MemoryLogs {
@@ -62,6 +77,7 @@ declare global {
       sourceLinkIds: Id<StructureLink>[];
       scanTime: number;
     };
+    targetId?: Id<Creep>;
   }
 
   interface LocalRoomStats {
@@ -71,10 +87,6 @@ declare global {
 
   interface Creep {
     memory: CreepMemory;
-
-    getEnergy(): void;
-
-    getEnergyFromTombstone(): boolean;
 
     getStatus(): string;
 
@@ -106,6 +118,11 @@ declare global {
     commands?: CreepCommand[];
     commandId?: number;
     nearbyContainerId?: Id<StructureContainer>;
+    working?: boolean;
+  }
+
+  interface Task {
+    execute(creep: Creep): TaskStatus;
   }
 
   interface RoomModule {
@@ -115,12 +132,13 @@ declare global {
 
   interface SpawnPlan {
     handlerName: string;
-    body: SpawnCreepBody[];
+    body: SpawnCreepBody[] | ((room: Room) => SpawnCreepBody[]);
     generation: number;
-    limit: number;
+    limit: number | ((room: Room) => number);
+    targetId?: Id<any>; // For permanent assignments like a miner to a source
     target?: string;
     targetRoom?: string;
-    commands?: CreepCommand[];
+    commands?: CreepCommand[] | ((room: Room) => CreepCommand[]);
     isEmergency?: boolean;
     minBody?: SpawnCreepBody[];
     priority?: number;
@@ -147,10 +165,7 @@ declare global {
   interface CreepRoleHandler {
     name: string;
     run: (creep: Creep) => void;
-    defaultMinBody?: SpawnCreepBody[];
-    defaultIsEmergency?: boolean;
-    defaultPriority?: number;
-    defaultPreSpawnTicks?: number;
+    getSpawnPlans(room: Room): SpawnPlan[];
   }
 
   interface CreepCommand {
@@ -160,11 +175,6 @@ declare global {
 
   interface CreepCommandHandler {
     id: string;
-    /**
-     * @param creep the creep to run command
-     * @param position the target of the command
-     * @returns true if command is finished
-     */
     run: (creep: Creep, position: RoomPosition) => boolean;
   }
 }

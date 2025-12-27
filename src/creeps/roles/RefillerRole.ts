@@ -1,182 +1,107 @@
-import { WorkManager } from "../../managers/WorkManager";
-import profiler from "screeps-profiler";
-
-const STATUS_GET_ENERGY_FOR_REFILL = "get_energy_for_refill";
-const STATUS_DELIVER_ENERGY_TO_STRUCTURES = "deliver_energy_to_structures";
-const STATUS_GET_ENERGY_FROM_LINK = "get_energy_from_link";
-const STATUS_DELIVER_ENERGY_TO_STORAGE = "deliver_energy_to_storage";
-const STATUS_IDLE = "idle";
+import { tickCache } from "../../cache/TickCache.ts";
+import { DeliverRefillEnergyTask } from "../tasks/DeliverRefillEnergyTask.ts";
+import { GatherRefillEnergyTask } from "../tasks/GatherRefillEnergyTask.ts";
+import { TaskStatus } from "../../types.ts";
 
 class RefillerRole implements CreepRoleHandler {
   public name = "refiller";
-  public defaultMinBody: SpawnCreepBody[] = [
-    { count: 2, body: CARRY },
-    { count: 1, body: MOVE },
-  ];
-  public defaultPriority = 10;
-  public defaultIsEmergency = true;
-  public defaultPreSpawnTicks = 50;
+
+  public getSpawnPlans(room: Room): SpawnPlan[] {
+    const extensions = tickCache.get(`extensions_${room.name}`, () =>
+      room.find(FIND_MY_STRUCTURES, {
+        filter: { structureType: STRUCTURE_EXTENSION },
+      }),
+    );
+    if (extensions.length === 0) {
+      return [];
+    }
+
+    const refillersInRoom = tickCache.get(`refillers_${room.name}`, () =>
+      Object.values(Game.creeps).filter(
+        (cr) => cr.memory.role === this.name && cr.memory.room === room.name,
+      ),
+    );
+
+    const baseLimit = 1;
+    let currentLimit = baseLimit;
+
+    if (refillersInRoom.length === baseLimit) {
+      // Pre-spawn logic
+      const refiller = refillersInRoom[0];
+      const preSpawnTicks = 50; // Start spawning 50 ticks before death
+      if (
+        refiller.ticksToLive !== undefined &&
+        refiller.ticksToLive <= preSpawnTicks
+      ) {
+        currentLimit = baseLimit + 1; // Temporarily increase limit to spawn a replacement
+      }
+    }
+
+    // Abort if the number of creeps already meets or exceeds the current limit
+    if (refillersInRoom.length >= currentLimit) {
+      return [];
+    }
+
+    const isEmergency = refillersInRoom.length === 0;
+    let body: SpawnCreepBody[];
+
+    if (isEmergency) {
+      // In an emergency, spawn what we can afford right now.
+      const energy = Math.max(room.energyAvailable, 300);
+      body = this.calculateBody(energy);
+    } else {
+      // For a planned replacement, wait for full energy capacity.
+      body = this.calculateBody(room.energyCapacityAvailable);
+    }
+
+    if (body.length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        handlerName: this.name,
+        body: body,
+        generation: 1,
+        limit: currentLimit, // Use the potentially increased limit
+        priority: 11,
+      },
+    ];
+  }
 
   public run(creep: Creep): void {
-    this.decideState(creep);
-
-    switch (creep.getStatus()) {
-      case STATUS_GET_ENERGY_FOR_REFILL:
-        this.executeGetEnergyForRefill(creep);
-        break;
-      case STATUS_DELIVER_ENERGY_TO_STRUCTURES:
-        this.executeDeliverEnergyToStructures(creep);
-        break;
-      case STATUS_GET_ENERGY_FROM_LINK:
-        this.executeGetEnergyFromLink(creep);
-        break;
-      case STATUS_DELIVER_ENERGY_TO_STORAGE:
-        this.executeDeliverEnergyToStorage(creep);
-        break;
-      case STATUS_IDLE:
-        this.executeIdleTask(creep);
-        break;
-      default:
-        creep.setStatus(STATUS_IDLE);
-        break;
-    }
-  }
-
-  /**
-   * Определяет, в каком состоянии должен быть крип.
-   */
-  private decideState(creep: Creep): void {
-    const currentStatus = creep.getStatus();
-    const hasEnergy = creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
-    const isFull = creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0;
-
-    // --- Главный приоритет: Заправка структур ---
-    const needsPrimaryRefill = WorkManager.hasPrimaryDeliveryTargets(
-      creep.room,
-    );
-    if (needsPrimaryRefill) {
-      if (hasEnergy) {
-        if (currentStatus !== STATUS_DELIVER_ENERGY_TO_STRUCTURES) {
-          creep.setStatus(STATUS_DELIVER_ENERGY_TO_STRUCTURES);
-          creep.setCreepTarget(null);
-        }
-      } else {
-        if (currentStatus !== STATUS_GET_ENERGY_FOR_REFILL) {
-          creep.setStatus(STATUS_GET_ENERGY_FOR_REFILL);
-          creep.setCreepTarget(null);
-        }
+    if (creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+      const task = new DeliverRefillEnergyTask();
+      if (task.execute(creep) !== TaskStatus.FAILED) {
+        return;
       }
-      return;
-    }
-
-    // --- Второй приоритет: Перевозка из центрального линка в хранилище ---
-    const storage = creep.room.storage;
-    const cache = creep.room.memory.linkCache;
-    const centralLink = cache?.centralLinkId
-      ? Game.getObjectById(cache.centralLinkId)
-      : null;
-    const centralLinkHasEnergy =
-      storage &&
-      centralLink &&
-      centralLink.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
-
-    if (centralLinkHasEnergy) {
-      if (isFull) {
-        if (currentStatus !== STATUS_DELIVER_ENERGY_TO_STORAGE) {
-          creep.setStatus(STATUS_DELIVER_ENERGY_TO_STORAGE);
-          creep.setCreepTarget(null);
-        }
-      } else {
-        if (currentStatus !== STATUS_GET_ENERGY_FROM_LINK) {
-          creep.setStatus(STATUS_GET_ENERGY_FROM_LINK);
-          creep.setCreepTarget(null);
-        }
-      }
-      return;
-    }
-
-    // --- Если задач нет - ожидание ---
-    if (currentStatus !== STATUS_IDLE) {
-      creep.setStatus(STATUS_IDLE);
-      creep.setCreepTarget(null);
-    }
-  }
-
-  /**
-   * Состояние: Ищем энергию для заправки структур.
-   */
-  private executeGetEnergyForRefill(creep: Creep): void {
-    // Используем creep.getEnergy() для поиска ближайшего источника
-    creep.getEnergy();
-  }
-
-  /**
-   * Состояние: Доставляем энергию в структуры.
-   */
-  private executeDeliverEnergyToStructures(creep: Creep): void {
-    WorkManager.deliverEnergyToSpawnsExtensionsTowers(creep);
-  }
-
-  /**
-   * Состояние: Берем энергию из центрального линка.
-   */
-  private executeGetEnergyFromLink(creep: Creep): void {
-    let target = creep.getCreepTarget<StructureLink>();
-
-    // Если закэшированная цель невалидна, ищем новую
-    if (!target || target.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
-      target = null; // Обнуляем, чтобы найти новую
-      const cache = creep.room.memory.linkCache;
-      if (cache?.centralLinkId) {
-        const centralLink = Game.getObjectById(cache.centralLinkId);
-        if (
-          centralLink &&
-          centralLink.store.getUsedCapacity(RESOURCE_ENERGY) > 0
-        ) {
-          target = centralLink;
-        }
+    } else {
+      const task = new GatherRefillEnergyTask();
+      if (task.execute(creep) !== TaskStatus.FAILED) {
+        return;
       }
     }
 
-    if (target) {
-      creep.setCreepTarget(target);
-      if (creep.withdraw(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        creep.customMoveTo(target);
-      }
-    }
+    this.executeIdleTask(creep);
   }
 
-  /**
-   * Состояние: Доставляем энергию в хранилище.
-   */
-  private executeDeliverEnergyToStorage(creep: Creep): void {
-    let target = creep.getCreepTarget<StructureStorage>();
-
-    // Если закэшированная цель невалидна, ищем новую
-    if (!target || target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
-      target = null;
-      if (
-        creep.room.storage &&
-        creep.room.storage.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-      ) {
-        target = creep.room.storage;
-      }
+  private calculateBody(energyCapacity: number): SpawnCreepBody[] {
+    const blockCost = 150; // CARRY, CARRY, MOVE
+    const numberOfBlocks = Math.floor(energyCapacity / blockCost);
+    const carryCount = Math.min(numberOfBlocks * 2, 32);
+    const moveCount = Math.min(numberOfBlocks, 16);
+    if (carryCount > 0) {
+      return [
+        { count: carryCount, body: CARRY },
+        { count: moveCount, body: MOVE },
+      ];
     }
-
-    if (target) {
-      creep.setCreepTarget(target);
-      if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        creep.customMoveTo(target);
-      }
-    }
+    return [];
   }
 
-  /**
-   * Состояние: Ожидание.
-   */
   private executeIdleTask(creep: Creep): void {
     const storage = creep.room.storage;
-    if (storage && !creep.pos.inRangeTo(storage, 3)) {
+    if (storage && !creep.pos.inRangeTo(storage, 2)) {
       creep.customMoveTo(storage);
     }
     creep.debugSay("😴");
@@ -184,4 +109,3 @@ class RefillerRole implements CreepRoleHandler {
 }
 
 export const refiller = new RefillerRole();
-profiler.registerObject(refiller, "Creep.Role.Refiller");

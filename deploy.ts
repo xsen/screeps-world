@@ -48,6 +48,9 @@ export async function publishToLocal() {
   try {
     const modules = getModules();
     const targetPath = `${process.env.SCREEPS_PATH}/${process.env.SCREEPS_BRANCH}`;
+
+    fs.mkdirSync(targetPath, { recursive: true });
+
     for (let name in modules) {
       fs.writeFileSync(`${targetPath}/${name}.js`, modules[name], {
         encoding: "utf8",

@@ -1,300 +1,126 @@
-import profiler from "screeps-profiler";
+import { DeliverEnergyTask } from "../tasks/DeliverEnergyTask.ts";
+import { WithdrawFromTarget } from "../tasks/WithdrawFromTarget.ts";
+import { PickupResource } from "../tasks/PickupResource.ts";
+import { TaskStatus } from "../../types.ts";
 
-const STATUS_TASK_COLLECT_DROPPED = "task_collect_dropped";
-const STATUS_TASK_HAUL_CONTAINER = "task_haul_container";
-const STATUS_TASK_STORE = "task_store";
-const STATUS_IDLE = "idle";
+// enum CarryState {
+//   GATHERING,
+//   DELIVERING,
+//   IDLE,
+// }
 
 class CarryRole implements CreepRoleHandler {
   public name = "carry";
-  public defaultMinBody: SpawnCreepBody[] = [
-    { count: 1, body: CARRY },
-    { count: 1, body: MOVE },
-  ];
-  public defaultPriority = 8;
-  public defaultIsEmergency = false;
-  public defaultPreSpawnTicks = 50;
+
+  public getSpawnPlans(room: Room): SpawnPlan[] {
+    room.name;
+    // This is a legacy role, spawn plans are defined manually in spawnPlan.ts
+    return [];
+  }
 
   public run(creep: Creep): void {
-    this.decideState(creep);
-
-    switch (creep.getStatus()) {
-      case STATUS_TASK_COLLECT_DROPPED:
-        this.executeCollectDroppedTask(creep);
-        break;
-      case STATUS_TASK_HAUL_CONTAINER:
-        this.executeHaulContainerTask(creep);
-        break;
-      case STATUS_TASK_STORE:
-        this.executeStoreTask(creep);
-        break;
-      case STATUS_IDLE:
-        this.executeIdleTask(creep);
-        break;
-      default:
-        creep.setStatus(STATUS_IDLE);
-        break;
-    }
-  }
-
-  /**
-   * Определяет, в каком состоянии должен быть крип.
-   */
-  private decideState(creep: Creep): void {
-    const currentStatus = creep.getStatus();
-    const isFull = creep.store.getFreeCapacity() === 0;
-    const hasResources = creep.store.getUsedCapacity() > 0;
-
-    // Приоритет 1: Если крип полон, он должен выгрузить ресурсы.
-    if (isFull) {
-      if (currentStatus !== STATUS_TASK_STORE) {
-        creep.setStatus(STATUS_TASK_STORE);
-        creep.setCreepTarget(null);
-      }
-      return;
-    }
-
-    // Если крип не полон, но у него есть ресурсы, и больше нечего собирать, он тоже должен выгрузить.
-    if (
-      hasResources &&
-      !this.hasMoreResourcesToCollect(creep.room, currentStatus)
-    ) {
-      if (currentStatus !== STATUS_TASK_STORE) {
-        creep.setStatus(STATUS_TASK_STORE);
-        creep.setCreepTarget(null);
-      }
-      return;
-    }
-
-    // Приоритет 2: Сбор брошенных ресурсов, руин, надгробий.
-    if (this.hasDroppedResources(creep.room)) {
-      if (currentStatus !== STATUS_TASK_COLLECT_DROPPED) {
-        creep.setStatus(STATUS_TASK_COLLECT_DROPPED);
-        creep.setCreepTarget(null);
-      }
-      return;
-    }
-
-    // Приоритет 3: Перевозка из контейнеров в хранилище (если хранилище есть).
-    if (creep.room.storage && this.hasHaulableContainers(creep.room)) {
-      if (currentStatus !== STATUS_TASK_HAUL_CONTAINER) {
-        creep.setStatus(STATUS_TASK_HAUL_CONTAINER);
-        creep.setCreepTarget(null);
-      }
-      return;
-    }
-
-    // Если ничего из вышеперечисленного, то ожидание.
-    if (currentStatus !== STATUS_IDLE) {
-      creep.setStatus(STATUS_IDLE);
+    // Simple state update
+    if (creep.memory.working && creep.store.getUsedCapacity() === 0) {
+      creep.memory.working = false;
       creep.setCreepTarget(null);
     }
-  }
-
-  /**
-   * Проверяет наличие брошенных ресурсов, руин или надгробий.
-   */
-  private hasDroppedResources(room: Room): boolean {
-    if (
-      room.find(FIND_DROPPED_RESOURCES, { filter: (r) => r.amount > 0 })
-        .length > 0
-    )
-      return true;
-    if (
-      room.find(FIND_RUINS, { filter: (r) => r.store.getUsedCapacity() > 0 })
-        .length > 0
-    )
-      return true;
-
-    return (
-      room.find(FIND_TOMBSTONES, {
-        filter: (t) => t.store.getUsedCapacity() > 0,
-      }).length > 0
-    );
-  }
-
-  /**
-   * Проверяет наличие непустых контейнеров (для перевозки в storage).
-   */
-  private hasHaulableContainers(room: Room): boolean {
-    return (
-      room.find(FIND_STRUCTURES, {
-        filter: (s) =>
-          s.structureType === STRUCTURE_CONTAINER &&
-          s.store.getUsedCapacity() > 0,
-      }).length > 0
-    );
-  }
-
-  /**
-   * Проверяет, есть ли еще ресурсы для сбора в текущем или следующем приоритете.
-   */
-  private hasMoreResourcesToCollect(
-    room: Room,
-    currentStatus: string,
-  ): boolean {
-    // Если текущий статус - сбор брошенных, и есть еще брошенные ресурсы
-    if (
-      currentStatus === STATUS_TASK_COLLECT_DROPPED &&
-      this.hasDroppedResources(room)
-    )
-      return true;
-    // Если есть брошенные ресурсы (даже если текущий статус не сбор брошенных)
-    if (this.hasDroppedResources(room)) return true;
-
-    // Если текущий статус - перевозка из контейнеров, и есть еще контейнеры
-    if (
-      currentStatus === STATUS_TASK_HAUL_CONTAINER &&
-      room.storage &&
-      this.hasHaulableContainers(room)
-    )
-      return true;
-    // Если есть контейнеры для перевозки (даже если текущий статус не перевозка из контейнеров)
-    return !!(room.storage && this.hasHaulableContainers(room));
-  }
-
-  /**
-   * ЗАДАЧА 1: Сбор брошенных ресурсов, руин, надгробий.
-   */
-  private executeCollectDroppedTask(creep: Creep): void {
-    let target = creep.getCreepTarget<Resource | Ruin | Tombstone>();
-
-    if (
-      target &&
-      (("store" in target && target.store.getUsedCapacity() === 0) ||
-        ("amount" in target && target.amount === 0))
-    ) {
-      target = null;
+    if (!creep.memory.working && creep.store.getFreeCapacity() === 0) {
+      creep.memory.working = true;
       creep.setCreepTarget(null);
+    }
+
+    if (creep.memory.working) {
+      this.executeDelivering(creep);
+    } else {
+      this.executeGathering(creep);
+    }
+  }
+
+  private executeDelivering(creep: Creep): void {
+    const target = creep.room.storage; // The ONLY delivery target for a Carry/Hauler
+
+    if (target) {
+      // No need to cache this target, it's always the same.
+      const taskResult = new DeliverEnergyTask(target).execute(creep);
+      if (taskResult === TaskStatus.COMPLETED) {
+        // Creep is empty, will switch to gathering on next tick.
+      }
+    } else {
+      creep.debugSay("NO STRG?");
+    }
+  }
+
+  private executeGathering(creep: Creep): void {
+    let target = creep.getCreepTarget<
+      Resource | Ruin | Tombstone | StructureContainer
+    >();
+
+    if (target) {
+      const isDepleted =
+        ("store" in target && target.store.getUsedCapacity() === 0) ||
+        ("amount" in target && target.amount === 0);
+      if (isDepleted) {
+        target = null;
+        creep.setCreepTarget(null);
+      }
     }
 
     if (!target) {
-      const droppedResource = creep.pos.findClosestByPath(
-        FIND_DROPPED_RESOURCES,
-      );
-      if (droppedResource) {
-        target = droppedResource;
-      } else {
-        const ruin = creep.pos.findClosestByPath(FIND_RUINS, {
-          filter: (r) => r.store.getUsedCapacity() > 0,
-        });
-        if (ruin) {
-          target = ruin;
-        } else {
-          const tombstone = creep.pos.findClosestByPath(FIND_TOMBSTONES, {
-            filter: (t) => t.store.getUsedCapacity() > 0,
-          });
-          if (tombstone) {
-            target = tombstone;
-          }
-        }
+      target = this.findNewGatherTarget(creep);
+      if (target) {
+        creep.setCreepTarget(target);
       }
     }
 
     if (target) {
-      creep.setCreepTarget(target);
-      if (target instanceof Resource) {
-        if (creep.pickup(target) === ERR_NOT_IN_RANGE) {
-          creep.customMoveTo(target);
-        }
-      } else {
-        for (const resourceType in target.store) {
-          if (
-            creep.withdraw(target, resourceType as ResourceConstant) ===
-            ERR_NOT_IN_RANGE
-          ) {
-            creep.customMoveTo(target);
-            break;
-          }
-        }
+      const task =
+        target instanceof Resource
+          ? new PickupResource(target)
+          : new WithdrawFromTarget(target);
+      const taskResult = task.execute(creep);
+      if (taskResult === TaskStatus.COMPLETED) {
+        creep.setCreepTarget(null);
       }
     } else {
-      creep.debugSay("🤷‍♂️");
+      if (creep.store.getUsedCapacity() > 0) {
+        creep.memory.working = true;
+      } else {
+        creep.debugSay("🤷‍♂️");
+      }
     }
   }
 
-  /**
-   * ЗАДАЧА 2: Перевозка из контейнеров в хранилище.
-   */
-  private executeHaulContainerTask(creep: Creep): void {
-    let target = creep.getCreepTarget<StructureContainer>();
+  private findNewGatherTarget(
+    creep: Creep,
+  ): Resource | Ruin | Tombstone | StructureContainer | null {
+    const dropped = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
+      filter: (r) => r.amount > 50,
+    });
+    if (dropped) return dropped;
 
-    if (target && target.store.getUsedCapacity() === 0) {
-      target = null;
-      creep.setCreepTarget(null);
-    }
+    const ruin = creep.pos.findClosestByPath(FIND_RUINS, {
+      filter: (r) => r.store.getUsedCapacity() > 0,
+    });
+    if (ruin) return ruin;
 
-    if (!target) {
-      target = creep.pos.findClosestByPath<StructureContainer>(
+    const tombstone = creep.pos.findClosestByPath(FIND_TOMBSTONES, {
+      filter: (t) => t.store.getUsedCapacity() > 0,
+    });
+    if (tombstone) return tombstone;
+
+    if (creep.room.storage) {
+      const container = creep.pos.findClosestByPath<StructureContainer>(
         FIND_STRUCTURES,
         {
           filter: (s) =>
             s.structureType === STRUCTURE_CONTAINER &&
-            s.store.getUsedCapacity() > 0,
+            s.store.getUsedCapacity() > 200,
         },
       );
+      if (container) return container;
     }
-
-    if (target) {
-      creep.setCreepTarget(target);
-      for (const resourceType in target.store) {
-        if (
-          creep.withdraw(target, resourceType as ResourceConstant) ===
-          ERR_NOT_IN_RANGE
-        ) {
-          creep.customMoveTo(target);
-          break;
-        }
-      }
-    } else {
-      creep.debugSay("🤷‍♀️");
-    }
-  }
-
-  /**
-   * ЗАДАЧА 3: Складирование ресурсов.
-   */
-  private executeStoreTask(creep: Creep): void {
-    let target: StructureStorage | StructureContainer | null;
-
-    // Приоритет 1: Storage
-    if (creep.room.storage && creep.room.storage.store.getFreeCapacity() > 0) {
-      target = creep.room.storage;
-    } else {
-      // Приоритет 2: Ближайший контейнер
-      target = creep.pos.findClosestByPath<StructureContainer>(
-        FIND_STRUCTURES,
-        {
-          filter: (s) =>
-            s.structureType === STRUCTURE_CONTAINER &&
-            s.store.getFreeCapacity() > 0,
-        },
-      );
-    }
-
-    if (target) {
-      creep.setCreepTarget(target);
-      for (const resourceType in creep.store) {
-        if (
-          creep.transfer(target, resourceType as ResourceConstant) ===
-          ERR_NOT_IN_RANGE
-        ) {
-          creep.customMoveTo(target);
-          break;
-        }
-      }
-    } else {
-      creep.debugSay("📦?");
-    }
-  }
-
-  /**
-   * ЗАДАЧА 4: Ожидание.
-   */
-  private executeIdleTask(creep: Creep): void {
-    creep.debugSay("💤");
+    return null;
   }
 }
 
 export const carry = new CarryRole();
-profiler.registerObject(carry, "Creep.Role.Carry");

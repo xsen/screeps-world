@@ -1,69 +1,112 @@
-/**
- * Базовый класс для "простых" ролей, которые живут по двухтактному циклу:
- * 1. Добыть энергию, пока трюм не заполнится.
- * 2. Работать, пока трюм не опустеет.
- *
- * Подходит для ролей: Builder, Upgrader, Repair.
- */
-
-export const CREEP_STATUS_GETTING_ENERGY = "gettingEnergy";
-export const CREEP_STATUS_WORKING = "working";
+import {HarvestFromSource} from "../tasks/HarvestFromSource.ts";
+import {WithdrawFromTarget} from "../tasks/WithdrawFromTarget.ts";
+import {PickupResource} from "../tasks/PickupResource.ts";
+import {TaskStatus} from "../../types.ts";
 
 export abstract class SimpleWorkRole implements CreepRoleHandler {
   public abstract name: string;
 
-  /**
-   * Основной метод выполнения роли. Управляет состоянием крипа.
-   */
   public run(creep: Creep): void {
-    this.switchState(creep);
+    this.updateState(creep);
 
-    if (creep.getStatus() === CREEP_STATUS_GETTING_ENERGY) {
-      this.doGetEnergy(creep);
+    if (creep.memory.working) {
+      this.findAndExecuteWorkTask(creep);
     } else {
-      this.doWork(creep);
+      this.findAndExecuteEnergyTask(creep);
     }
   }
 
-  /**
-   * Метод для получения энергии. По умолчанию использует EnergyManager.
-   */
-  protected doGetEnergy(creep: Creep): void {
-    creep.getEnergy();
+  public abstract getSpawnPlans(room: Room): SpawnPlan[];
+
+  protected findAndExecuteEnergyTask(creep: Creep): void {
+    let target = creep.getCreepTarget<StructureContainer | StructureStorage | Source | Resource>();
+
+    if (target) {
+      const isDepleted =
+        ("store" in target && target.store.getUsedCapacity(RESOURCE_ENERGY) === 0) ||
+        ("amount" in target && target.amount === 0) ||
+        ("energy" in target && target.energy === 0);
+      if (isDepleted) {
+        target = null;
+        creep.setCreepTarget(null);
+      }
+    }
+
+    if (!target) {
+      const newTarget = this.findNewEnergySource(creep);
+      if (newTarget) {
+        target = newTarget;
+        creep.setCreepTarget(newTarget);
+      }
+    }
+
+    if (target) {
+      let task: Task;
+      if ("amount" in target) {
+        task = new PickupResource(target as Resource);
+      } else if ("energy" in target) {
+        task = new HarvestFromSource(target as Source);
+      } else if ("store" in target) {
+        task = new WithdrawFromTarget(target as StructureContainer | StructureStorage);
+      } else {
+        creep.setCreepTarget(null);
+        creep.debugSay("❓TGT");
+        return;
+      }
+
+      const taskResult = task.execute(creep);
+      if (taskResult === TaskStatus.COMPLETED || taskResult === TaskStatus.FAILED) {
+        creep.setCreepTarget(null);
+      }
+    } else {
+      creep.debugSay("😴");
+    }
   }
 
-  /**
-   * Абстрактный метод для выполнения работы. Должен быть реализован в дочерних классах.
-   */
-  protected abstract doWork(creep: Creep): void;
+  private findNewEnergySource(creep: Creep): StructureContainer | StructureStorage | Source | Resource | null {
+    const energySources: (StructureContainer | StructureStorage | Resource)[] = [];
 
-  /**
-   * Переключает состояние крипа в зависимости от его заполненности.
-   */
-  private switchState(creep: Creep): void {
-    const currentStatus = creep.getStatus();
-    const usedEnergy = creep.store.getUsedCapacity(RESOURCE_ENERGY);
-    const freeCapacity = creep.store.getFreeCapacity(RESOURCE_ENERGY);
+    // Storage
+    if (creep.room.storage && creep.room.storage.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+      energySources.push(creep.room.storage);
+    }
 
-    // Если крип НЕ добывает энергию и у него 0 энергии, переключаем его на добычу.
-    if (currentStatus !== CREEP_STATUS_GETTING_ENERGY && usedEnergy === 0) {
-      creep.setStatus(CREEP_STATUS_GETTING_ENERGY);
+    // Containers
+    const containers = creep.room.find<StructureContainer>(FIND_STRUCTURES, {
+      filter: s => s.structureType === STRUCTURE_CONTAINER && s.store.getUsedCapacity(RESOURCE_ENERGY) > 100,
+    });
+    energySources.push(...containers);
+
+    // Dropped Resources
+    const droppedResources = creep.room.find(FIND_DROPPED_RESOURCES, {
+      filter: r => r.resourceType === RESOURCE_ENERGY && r.amount > 50,
+    });
+    energySources.push(...droppedResources);
+
+    if (energySources.length > 0) {
+      return creep.pos.findClosestByPath(energySources);
+    }
+
+    // Last Resort: Active Sources
+    const source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+    if (source) return source;
+
+    return null;
+  }
+
+  protected abstract findAndExecuteWorkTask(creep: Creep): void;
+
+  private updateState(creep: Creep): void {
+    if (creep.memory.working && creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+      creep.memory.working = false;
       creep.setCreepTarget(null);
       creep.debugSay("⚡");
-    }
-    // Если крип добывает энергию и его трюм полон, переключаем на работу.
-    else if (
-      currentStatus === CREEP_STATUS_GETTING_ENERGY &&
-      freeCapacity === 0
-    ) {
-      creep.setStatus(CREEP_STATUS_WORKING);
+    } else if (!creep.memory.working && creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+      creep.memory.working = true;
       creep.setCreepTarget(null);
       creep.debugSay("🚧");
-    }
-    // Если статус не установлен, по умолчанию отправляем за энергией.
-    else if (!currentStatus) {
-      creep.setStatus(CREEP_STATUS_GETTING_ENERGY);
-      creep.setCreepTarget(null);
+    } else if (creep.memory.working === undefined) {
+      creep.memory.working = false;
     }
   }
 }

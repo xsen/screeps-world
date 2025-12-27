@@ -1,5 +1,4 @@
 import { commands } from "../commands";
-import profiler from "screeps-profiler";
 
 class CommandRole implements CreepRoleHandler {
   public name = "command";
@@ -39,7 +38,12 @@ class CommandRole implements CreepRoleHandler {
         (commandIndex + 1) % creep.memory.commands.length;
     }
   }
+
+  public getSpawnPlans(room: Room): SpawnPlan[] {
+    room.name;
+    // This role is manually controlled via spawnPlan.ts, so it has no default plans.
+    return [];
+  }
 }
 
 export const command = new CommandRole();
-profiler.registerObject(command, "Creep.Role.Command");
