@@ -13,11 +13,14 @@ export const claim: CreepCommandHandler = {
       return true;
     }
 
-    creep.claimController(controller);
-    // creep.attackController(controller);
-    // creep.signController(controller, "");
+    if (!controller.my) {
+      if (controller.reservation?.ticksToEnd) {
+        creep.attackController(controller);
+      } else {
+        creep.claimController(controller);
+      }
+    }
     creep.customMoveTo(controller);
-
-    return creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0;
+    return false;
   },
 };

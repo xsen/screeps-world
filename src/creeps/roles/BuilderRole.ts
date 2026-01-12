@@ -48,17 +48,16 @@ class BuilderRole extends SimpleWorkRole {
   private calculateBody(energy: number): SpawnCreepBody[] {
     const body: BodyPartConstant[] = [];
     let cost = 0;
-    // 1:1:1 ratio
-    while (cost < energy && body.length < 48) {
-      if (cost + 200 <= energy) {
-        body.unshift(WORK);
-        body.push(CARRY);
-        body.push(MOVE);
-        cost += 200;
-      } else {
-        break;
-      }
+    const costPerSet = 200; // WORK (100) + CARRY (50) + MOVE (50)
+
+    // 1:1:1 ratio - добавляем наборы WORK+CARRY+MOVE
+    while (cost + costPerSet <= energy && body.length < 48) {
+      body.push(WORK);
+      body.push(CARRY);
+      body.push(MOVE);
+      cost += costPerSet;
     }
+
     const bodyParts: { [key: string]: number } = body.reduce(
       (acc, part) => {
         acc[part] = (acc[part] || 0) + 1;

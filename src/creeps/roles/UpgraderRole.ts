@@ -113,30 +113,19 @@ class UpgraderRole extends SimpleWorkRole {
       return []; // Not enough energy for a minimal upgrader
     }
 
-    // Define the repeating block for balance
-    const block = [WORK, WORK, CARRY, MOVE];
-    const blockCost = 300;
+    // Define the repeating block for 1:1:1 ratio
+    const block = [WORK, CARRY, MOVE];
+    const blockCost = 200;
 
     while (true) {
       const workParts = body.filter((p) => p === WORK).length;
-      if (
+      const canAdd =
         cost + blockCost <= energy &&
         body.length + block.length <= 50 &&
-        workParts < maxWork
-      ) {
+        workParts < maxWork;
+      if (canAdd) {
         body.push(...block);
         cost += blockCost;
-      } else {
-        break;
-      }
-    }
-
-    // Fill remaining energy with WORK and MOVE parts for efficiency
-    while (cost < energy && body.length < 50) {
-      const workParts = body.filter((p) => p === WORK).length;
-      if (cost + 150 <= energy && workParts < maxWork) {
-        body.push(WORK, MOVE);
-        cost += 150;
       } else {
         break;
       }

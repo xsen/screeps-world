@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "build": "tsc && vite build",
     "remote": "tsc && vite build --mode rem",
     "local": "tsc && vite build --mode loc"
   },

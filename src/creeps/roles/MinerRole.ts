@@ -35,7 +35,8 @@ class MinerRole implements CreepRoleHandler {
       let limit = 1;
       if (creepsForThisSource.length === 1) {
         const miner = creepsForThisSource[0];
-        if (miner.ticksToLive !== undefined && miner.ticksToLive <= preSpawnTicks) {
+        const shouldPreSpawn = miner.ticksToLive !== undefined && miner.ticksToLive <= preSpawnTicks;
+        if (shouldPreSpawn) {
           limit = 2;
         }
       } else if (creepsForThisSource.length === 0) {

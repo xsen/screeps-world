@@ -52,6 +52,7 @@ class ScavengerRole implements CreepRoleHandler {
 
   public run(creep: Creep): void {
     const memory = creep.memory as ScavengerMemory;
+
     if (memory.isAssisting === undefined) {
       memory.isAssisting = false;
     }
@@ -129,10 +130,17 @@ class ScavengerRole implements CreepRoleHandler {
       StructureStorage | StructureTerminal | StructureContainer
     >();
 
-    if (
-      target &&
-      (!("store" in target) || target.store.getFreeCapacity() === 0)
-    ) {
+    // Если target не существует (получили null из Game.getObjectById) - очищаем
+    if (!target) {
+      creep.setCreepTarget(null);
+    }
+    // Если target не имеет structureType (не структура) - очищаем
+    else if (!("structureType" in target)) {
+      target = null;
+      creep.setCreepTarget(null);
+    }
+    // Если структура заполнена - очищаем
+    else if ("store" in target && target.store.getFreeCapacity() === 0) {
       target = null;
       creep.setCreepTarget(null);
     }
@@ -146,7 +154,9 @@ class ScavengerRole implements CreepRoleHandler {
             s.structureType === STRUCTURE_CONTAINER &&
             s.store.getFreeCapacity() > 0,
         });
-      if (target) creep.setCreepTarget(target);
+      if (target) {
+        creep.setCreepTarget(target);
+      }
     }
 
     if (target) {
@@ -165,7 +175,10 @@ class ScavengerRole implements CreepRoleHandler {
   private executeGathering(creep: Creep): boolean {
     let target = creep.getCreepTarget<Resource | Tombstone | Ruin>();
 
-    if (target) {
+    // Если target не существует (получили null из Game.getObjectById) - очищаем
+    if (!target) {
+      creep.setCreepTarget(null);
+    } else {
       const isInvalidType =
         !(target instanceof Resource) &&
         !(target instanceof Tombstone) &&
@@ -196,7 +209,9 @@ class ScavengerRole implements CreepRoleHandler {
           const ruin = creep.pos.findClosestByPath(FIND_RUINS, {
             filter: (r) => r.store.getUsedCapacity() > 0,
           });
-          if (ruin) target = ruin;
+          if (ruin) {
+            target = ruin;
+          }
         }
       }
       if (target) creep.setCreepTarget(target);
@@ -204,12 +219,31 @@ class ScavengerRole implements CreepRoleHandler {
 
     if (target) {
       let task: Task;
+      let taskStatus: TaskStatus;
       if (target instanceof Resource) {
         task = new PickupResource(target);
+        taskStatus = task.execute(creep);
       } else {
         task = new WithdrawFromTarget(target);
+        taskStatus = task.execute(creep);
       }
-      task.execute(creep);
+
+      // Если задача выполнилась - проверяем не исчерпан ли ресурс
+      if (taskStatus === TaskStatus.IN_PROGRESS) {
+        const isResourceEmpty =
+          ("amount" in target && target.amount === 0) ||
+          ("store" in target &&
+            target.store.getUsedCapacity(RESOURCE_ENERGY) === 0);
+        if (isResourceEmpty) {
+          creep.setCreepTarget(null);
+        } else if (
+          creep.pos.inRangeTo(target, 1) &&
+          creep.store.getFreeCapacity() === 0
+        ) {
+          // Если крип заполнился - тоже очищаем для доставки
+          creep.setCreepTarget(null);
+        }
+      }
       return true;
     }
     return false;

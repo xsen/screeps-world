@@ -1,3 +1,32 @@
-// This file is deprecated and can be removed.
-// The manual spawn plan in spawnPlan.ts now uses plain objects,
-// and the logic for creating default plans has been moved into CreepRoleHandlers.
+import { transfer } from "../creeps/commands/transfer.ts";
+import { withdraw } from "../creeps/commands/withdraw.ts";
+
+export function sendFromTerminalToStorage(room: Room) {
+  if (!room.storage || !room.terminal) return [];
+
+  return [
+    {
+      target: room.terminal.pos,
+      handler: withdraw,
+    },
+    {
+      target: room.storage.pos,
+      handler: transfer,
+    },
+  ];
+}
+
+export function sendFromStorageToTerminal(room: Room) {
+  if (!room.storage || !room.terminal) return [];
+
+  return [
+    {
+      target: room.storage.pos,
+      handler: withdraw,
+    },
+    {
+      target: room.terminal.pos,
+      handler: transfer,
+    },
+  ];
+}
