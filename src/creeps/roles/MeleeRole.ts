@@ -15,7 +15,7 @@ class MeleeRole implements CreepRoleHandler {
     if (
       creep.room.controller &&
       creep.room.controller.my &&
-      creep.pos.getRangeTo(creep.room.controller) > 6
+      creep.pos.getRangeTo(creep.room.controller) > 4
     ) {
       creep.customMoveTo(creep.room.controller);
     }
